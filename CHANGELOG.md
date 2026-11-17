@@ -1,4 +1,11 @@
-## 1.1.7 – 2026-11-11
+## 1.1.7 – 2026-11-17
+
+- Finalize the 1.1.7 candidate based on the NAS-verified export behavior.
+- Use fresh JavaScript and CSS cache keys to avoid loading stale assets from earlier 1.1.7 builds.
+- No changes to export/import logic, file formats, migrations, icons, screenshots or locales.
+
+
+- Export jednoho rodokmenu do nativní ZIP zálohy a GEDCOMu dostal název podle rodokmenu a času vytvoření (`Charles_IV_Family_Tree_17112026_1151.zip` / `.ged`); export všech vlastních stromů používá `Vsechny_rodokmeny`. Formáty souborů ani importy se nemění.
 
 - Oprava chyby importu nahlášené v GitHub issue #1: `ResearchImportService::validate()` nyní vrací všechny údaje náhledu explicitně pod správnými klíči; odstraněno chybné `compact()` používající názvy neexistujících proměnných.
 - Metadata App Storu: odstraněny tři redundantní odkazy na dokumentaci; v sekci Prostředky zůstává jediná domovská stránka. README v CZ/EN obsahuje jen přepínač jazyka v záhlaví, ostatní odkazy jsou v obsahu.

@@ -182,7 +182,10 @@ function (int $nTreeId, string $sPath) use (&$oStagedPaths): void {
             $oZipOpen = false;
             $oBytes = file_get_contents($oTmp);
             if (!is_string($oBytes)) throw new \RuntimeException('Cannot read ZIP.');
-            return ['archive' => $oBytes, 'filename' => 'hc-familytree-backup-' . gmdate('Ymd-His') . '.zip',
+            $sExportTitle = count($aTrees) === 1
+                ? (string)($aTrees[0]['name'] ?? '')
+                : 'Vsechny_rodokmeny';
+            return ['archive' => $oBytes, 'filename' => ExportFilename::build($sExportTitle, 'zip'),
                 'trees' => count($aTrees), 'files' => count($aFiles)];
         } finally {
             if ($oZipOpen) @$oZip->close();

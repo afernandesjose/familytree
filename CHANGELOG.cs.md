@@ -1,4 +1,4 @@
-## 1.1.7 – 2026-11-11
+## 1.1.7 – 2026-11-17
 
 - Opraven import podle GitHub issue #1: explicitní návratové klíče v `ResearchImportService::validate()` místo neplatného `compact()`. Přidán spustitelný regresní test.
 - App Store: jediný odkaz Domovská stránka, bez opakovaných dokumentačních odkazů. README nahoře jen jazyková volba Česky / English.

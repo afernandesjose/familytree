@@ -50,6 +50,10 @@ The script deploys `src/` into the selected Nextcloud containers, checks the Cor
 - Responsive UI with English as default/fallback, Czech and nine other locale catalogs
 - **Merge research findings** into an existing family tree using a ZIP bundle with GEDZIP, a research-journal JSON, and archive scans. Preview and explicitly approve all changes before importing; existing people and facts are not overwritten.
 
+## Sample family tree of Charles IV
+
+To try the import workflow, see **[examples/ – Charles IV sample family tree](examples/)** on GitHub. This directory is prepared for a sample GEDCOM 7 (`.ged`) or GEDZIP (`.gdz`) file and includes [English import instructions](examples/README.md). Sample data is intended for demonstration, not as a FamilyTree native backup. If there is no `.ged` or `.gdz` file in the directory yet, the sample data still needs to be published on GitHub.
+
 ## Data and documentation
 
 - [Import/export formats and data ownership](docs/en/03_DATA.md)

@@ -231,7 +231,7 @@ fn($nA,$aB)=>(int)$aB['updated_at']<=>(int)$nA['updated_at']);return new DataRes
    }catch(\InvalidArgumentException $oError){return new JSONResponse(['error'=>$oError->getMessage()],422);}
    return new \OCP\AppFramework\Http\DataDisplayResponse($aData,200,[
     'Content-Type'=>'text/plain; charset=utf-8',
-    'Content-Disposition'=>'attachment; filename="hc_familytree-'.$nTreeId.'.ged"',
+    'Content-Disposition'=>ExportFilename::contentDisposition(ExportFilename::build((string)($this->rows('hc_familytree_trees', ['id'=>$nTreeId])[0]['name'] ?? ''), 'ged')),
     'X-Content-Type-Options'=>'nosniff','Cache-Control'=>'private, no-store',
    ]);
   }
@@ -246,7 +246,7 @@ fn($nA,$aB)=>(int)$aB['updated_at']<=>(int)$nA['updated_at']);return new DataRes
    try{$oResult=$this->oNative->export($this->sUid,$sRaw===null?null:(int)$sRaw);}
    catch(\InvalidArgumentException $oError){return new JSONResponse(['error'=>$oError->getMessage()],422);}
    return new \OCP\AppFramework\Http\DataDisplayResponse($oResult['archive'],200,[
-    'Content-Type'=>'application/zip','Content-Disposition'=>'attachment; filename="'.$oResult['filename'].'"',
+    'Content-Type'=>'application/zip','Content-Disposition'=>ExportFilename::contentDisposition($oResult['filename']),
     'X-Content-Type-Options'=>'nosniff','Cache-Control'=>'private, no-store'
    ]);
   }

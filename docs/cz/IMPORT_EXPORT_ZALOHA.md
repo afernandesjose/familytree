@@ -1,3 +1,5 @@
+**Název exportovaného souboru:** Při exportu jednoho rodokmenu se soubor jmenuje podle stromu, například `Charles_IV_Family_Tree_17112026_1151.zip` nebo `.ged` (DDMMRRRR_HHMM, čas v prohlížeči). Mezery jsou převedeny na podtržítka; při společné ZIP záloze více stromů se použije `Vsechny_rodokmeny_DDMMRRRR_HHMM.zip`. Jde pouze o název souboru, nikoli o změnu jeho formátu.
+
 # Úplná záloha FamilyTree, GEDCOM a export/import výzkumného deníku
 
 Kompletní normativní specifikaci obou formátů a bezpečný postup obnovy obsahuje **[FORMATY_IMPORT_EXPORT.md](FORMATY_IMPORT_EXPORT.md)**.
@@ -9,6 +11,12 @@ Kompletní normativní specifikaci obou formátů a bezpečný postup obnovy obs
 V aktuálním UI už nejsou samostatná spodní tlačítka Import/Export: používají se plovoucí nabídky **⋯** v hlavičce aplikace a u každého rodokmenu.
 
 Pro přípravu importního JSON v externích nástrojích použijte veřejnou [specifikaci formátu](FORMATY_IMPORT_EXPORT.md).
+
+## Vzorový rodokmen Karla IV.
+
+Pro první vyzkoušení importu je v repozitáři připravená složka **[examples/ – ukázkový rodokmen Karla IV.](../../examples/)**. Až do ní bude nahraný soubor `.ged` nebo `.gdz`, stáhněte jej z GitHubu a v aplikaci vyberte **⋯ → Import rodokmenu / zálohy → GEDCOM 7 / GEDZIP**. Pro demonstraci doporučujeme založit **nový rodokmen** a neimportovat ukázková data do již používaného stromu.
+
+Ukázkový GEDCOM/GEDZIP není úplná nativní záloha FamilyTree; vzorový soubor se zveřejňuje odděleně na GitHubu a **není součástí instalačního balíčku**. Viz [návod k ukázce](../../examples/README_CZ.md).
 
 ## Jednotný import od verze 1.1.0-dev11
 

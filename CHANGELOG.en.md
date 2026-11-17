@@ -1,4 +1,4 @@
-## 1.1.7 – 2026-11-11
+## 1.1.7 – 2026-11-17
 
 - Fix GitHub issue #1: the research import preview now maps H05-prefixed PHP variables to the correct stable response keys instead of using invalid `compact()` names; executable regression test added.
 - App Store metadata now expose only the Homepage resource (redundant documentation links removed); the README headers retain only the Czech/English language switch.

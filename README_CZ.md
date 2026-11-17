@@ -49,6 +49,10 @@ Také `uninstall.sh` je specializovaný nástroj pro vývojáře/správce v tomt
 - Sdílení s kontrolou přístupových práv uživatelů Nextcloudu
 - Responzivní rozhraní a katalogy 11 jazyků; výchozí jazyk a záložní překlad jsou anglické
 
+## Vzorový rodokmen Karla IV.
+
+Pro vyzkoušení importu je na GitHubu připravená složka **[examples/ – vzorový rodokmen Karla IV.](examples/)**. Najdete zde místo pro ukázkový soubor GEDCOM 7 (`.ged`) nebo GEDZIP (`.gdz`) a [český postup importu](examples/README_CZ.md). Vzorová data slouží k seznámení s aplikací a nejsou nativní zálohou FamilyTree. Pokud zatím ve složce žádný soubor `.ged` nebo `.gdz` není, je potřeba nejprve ukázková data na GitHub zveřejnit.
+
 ## Data a dokumentace
 
 - [Údaje a výměnné formáty](docs/cz/03_DATA.md)

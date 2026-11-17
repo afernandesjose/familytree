@@ -6328,6 +6328,26 @@ function positionPopover(oPop,oAnchor3,oPreferredWidth){if(!oPop||!oAnchor3)retu
  * @param {string} sFilename Vstupní hodnota filename; význam odpovídá zpracovávanému prvku nebo stavu.
  * @returns {void} Funkce nevrací hodnotu.
  */
+/**
+ * @brief Sestaví název staženého rodokmenu podle jeho jména a místního času uživatele.
+ * @param {string} sTreeName Název rodokmenu nebo skupiny rodokmenů.
+ * @param {string} sExtension Přípona zip nebo ged.
+ * @param {Date} oDate Čas vytvoření souboru ve výchozím časovém pásmu prohlížeče.
+ * @returns {string} Bezpečný název ve tvaru Charles_IV_Family_Tree_17112026_1151.zip.
+ */
+function exportFileName(sTreeName,sExtension,oDate=new Date()){
+ const sBase=String(sTreeName||'').trim().replace(/[<>:"/\\|?*\u0000-\u001f\u007f]/g,'_')
+  .replace(/\s+/g,'_').replace(/_+/g,'_').replace(/^[._-]+|[._-]+$/g,'').slice(0,100)||'Rodokmen';
+ const fnPad=/** @h05-inline
+ * @brief Doplní dvouciferný údaj datumové značky nulou.
+ * @param {number} nValue Měsíc, den, hodina nebo minuta.
+ * @returns {string} Dvouciferný text.
+ */nValue=>String(nValue).padStart(2,'0');
+ const sStamp=fnPad(oDate.getDate())+fnPad(oDate.getMonth()+1)+oDate.getFullYear()+'_'+fnPad(oDate.getHours())+fnPad(oDate.getMinutes());
+ if(!['zip','ged'].includes(sExtension))throw Error('Unsupported export extension');
+ return sBase+'_'+sStamp+'.'+sExtension;
+}
+//*****************************************************************************
 function downloadArchiveBlob(oBlob,sFilename){
  const sHref=URL.createObjectURL(oBlob);
  try{const hLink2=document.createElement('a');hLink2.href=sHref;hLink2.download=sFilename;document.body.appendChild(hLink2);hLink2.click();hLink2.remove()}
@@ -6404,9 +6424,15 @@ async()=>{
    if(oBlob2.size<100||oBlob2.size>300*1024*1024)throw Error(fnTr("The server did not return a valid FamilyTree archive."));
    const oSignature2=new Uint8Array(await oBlob2.slice(0,4).arrayBuffer());
    if(oSignature2[0]!==80||oSignature2[1]!==75||oSignature2[2]!==3||oSignature2[3]!==4)throw Error(fnTr("The server did not return a ZIP archive."));
-   const sHeader=oResponse.headers.get('Content-Disposition')||'';
-   const sServerFilename=sHeader.match(/filename="(hc-familytree-backup-[0-9]{8}-[0-9]{6}\.zip)"/i)?.[1];
-   downloadArchiveBlob(oBlob2,sServerFilename||'hc-familytree-backup-'+new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'.zip');
+   // Pro uživatele má přednost místní čas a název exportovaného rodokmenu.
+   const aOwnedTrees=aTrees.filter(/** @h05-inline
+ * @brief Vybere pouze vlastní rodokmeny z aktuálního seznamu.
+ * @param {object} oTree Rodokmen z přehledu.
+ * @returns {boolean} True u vlastního rodokmenu.
+ */oTree=>oTree.isOwner);
+   const sExportTreeName=oScopeValue==='current'?oCurrentName:
+    aOwnedTrees.length===1?aOwnedTrees[0].name:'Vsechny_rodokmeny';
+   downloadArchiveBlob(oBlob2,exportFileName(sExportTreeName,'zip'));
    sStatus.textContent=fnTr("Backup is ready to download.");
   }catch(oError14){sStatus.textContent=oError14.message;fnToast(oError14.message,'error')}
   finally{nStart3.disabled=false}
@@ -6613,13 +6639,7 @@ async()=>{
    if(!oResponse2.ok){let sMessage4='HTTP '+oResponse2.status;try{const oError17=await oResponse2.json();sMessage4=oError17.error||sMessage4}catch(oValue12){}throw Error(fnTrServer(sMessage4))}
    const oFile2=await oResponse2.blob();
    if(!oFile2.size||oFile2.size>5*1024*1024||!(await oFile2.slice(0,100).text()).startsWith('0 HEAD'))throw Error(fnTr("The server did not return a valid GEDCOM file."));
-   const sHref2=URL.createObjectURL(oFile2);
-   try{const hAnchor=document.createElement('a');hAnchor.href=sHref2;hAnchor.download='hc_familytree-'+nCurrent+'.ged';document.body.appendChild(hAnchor);hAnchor.click();hAnchor.remove()}
-   finally{setTimeout(/** @h05-inline
- * @brief Provede odloženou akci po uplynutí požadovaného intervalu.
- * @returns {void} Výsledná hodnota nebo dokončení callbacku.
- */
-()=>URL.revokeObjectURL(sHref2),60000)}
+   downloadArchiveBlob(oFile2,exportFileName(currentTreeName(),'ged'));
    sStatus2.textContent=fnTr("The GEDCOM file is ready for download.");
   }catch(oError18){sStatus2.textContent=oError18.message;fnToast(oError18.message,'error')}
   finally{hButton9.disabled=false}
