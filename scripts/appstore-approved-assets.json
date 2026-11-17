@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "appId": "hc_familytree",
+  "releaseBaseline": "1.1.0",
+  "purpose": "Schválené screenshoty jsou samostatně na GitHubu, nevstupují do podepsaného TAR.GZ ani ZIPu Publisheru. Manifest uchovává jejich schválené SHA-256.",
+  "runtimeAssets": [
+    {
+      "source": "src/img/app.svg",
+      "runtime": "img/app.svg",
+      "format": "svg",
+      "sha256": "d580047d8f81aeaf6bb5bd2c0cfd13ec5f4220192809005abdd0364c99966980"
+    }
+  ],
+  "screenshots": [
+    {
+      "source": "screenshot/01.png",
+      "sha256": "eac492cf7f6eb13954b8dcbaed89b41a92e41bf0d6a9b6b19109980d80557458",
+      "width": 2044,
+      "height": 1020,
+      "url": "https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/01.png",
+      "thumbnail": {
+        "source": "screenshot/01.png",
+        "sha256": "eac492cf7f6eb13954b8dcbaed89b41a92e41bf0d6a9b6b19109980d80557458",
+        "width": 2044,
+        "height": 1020,
+        "url": "https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/01.png"
+      }
+    },
+    {
+      "source": "screenshot/02.png",
+      "sha256": "d3fc89c32dac918a85272e7d40be4da6ac1040c668962af6da26b7543dd35404",
+      "width": 965,
+      "height": 820,
+      "url": "https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/02.png"
+    },
+    {
+      "source": "screenshot/03.png",
+      "sha256": "240ecf0fde68e8b6b015a31006f0542d1da2cbfb8efc8a0420f77d73e379fd58",
+      "width": 968,
+      "height": 830,
+      "url": "https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/03.png"
+    }
+  ],
+  "readmeMainScreenshot": "screenshot/01.png",
+  "cardPolicy": "Use the original first screenshot without small-thumbnail; do not use the icon or logo as the App Store card image.",
+  "sourceMode": "external-github-screenshots",
+  "githubRepo": "hacesoft/familytree"
+}

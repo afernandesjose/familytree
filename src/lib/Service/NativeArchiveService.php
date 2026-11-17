@@ -128,6 +128,19 @@ function (int $nTreeId, string $sPath) use (&$oStagedPaths): void {
             $sPath = (string)($oDocument['file_path'] ?? '');
             if ($sPath !== '' && !filter_var($sPath, FILTER_VALIDATE_URL)) $sAddPath((int)$oDocument['tree_id'], $sPath);
         }
+        // CZ: U fotografií osoby archivovat originál i jeho upravenou variantu.
+        // Sloupec source dokumentu typu person_photo drží lokální cestu k výřezu.
+        foreach ($aTables['hc_familytree_documents'] as $aDocument) {
+            if (($aDocument['document_type'] ?? '') === 'person_photo') {
+                $sPortrait = (string)($aDocument['source'] ?? '');
+                // Jen fotografie spravované novou galerií: starší dokument mohl
+                // mít typ person_photo, ale pole source bylo obyčejnou citací.
+                if (str_starts_with($sPortrait, 'Rodokmen/Fotografie/')
+                    || str_starts_with($sPortrait, 'Rodokmen/Obnova/')) {
+                    $sAddPath((int)$aDocument['tree_id'], $sPortrait);
+                }
+            }
+        }
         foreach ($aTables['hc_familytree_research'] as $aResearch) {
             if (($aResearch['media_path'] ?? '') !== '') $sAddPath((int)$aResearch['tree_id'], (string)$aResearch['media_path']);
         }
@@ -310,13 +323,26 @@ function (int $nTreeId, string $sPath) use (&$oStagedPaths): void {
                 $oMaps['hc_familytree_trees'][$sOldId] = $sNewId;
                 $oRestored[] = ['oldTreeId' => $sOldId, 'treeId' => $sNewId, 'root' => $oRootOld];
             }
+            // CZ: Identifikátory osob rezervovat před uložením fotografií; složky
+            // se pak obnovují do nového rodokmenu i pod novým stabilním ID osoby.
+            foreach ($aTables['hc_familytree_people'] as $aPerson) {
+                $nOldTree = (int)$aPerson['tree_id'];
+                $sOldStable = (string)$aPerson['stable_id'];
+                $oStableMaps[$nOldTree][$sOldStable] = ResearchJournalService::uid();
+            }
             // Store all imported data files in a controlled namespace before committing DB rows.
             foreach ($oArchive['manifest']['files'] as $oFile) {
                 $oSourceTree = (int)$oFile['treeId'];
                 $oNewTree = $oMaps['hc_familytree_trees'][$oSourceTree];
                 $oOriginal = $oFile['sourcePath'];
                 $sPrefix = 'Rodokmen/Import/' . $oSourceTree . '/';
-                if (str_starts_with($oOriginal,$sPrefix)) {
+                if (preg_match('~^Rodokmen/Fotografie/([0-9]+)/([a-f0-9]{32})/([a-f0-9]{32})/(original\.(?:jpg|png|webp)|portrait\.jpg)$~D', $oOriginal, $aPhotoMatch)
+                    && (int)$aPhotoMatch[1] === $oSourceTree
+                    && isset($oStableMaps[$oSourceTree][$aPhotoMatch[2]])) {
+                    $oDest = 'Rodokmen/Fotografie/' . $oNewTree . '/'
+                        . $oStableMaps[$oSourceTree][$aPhotoMatch[2]] . '/'
+                        . $aPhotoMatch[3] . '/' . $aPhotoMatch[4];
+                } elseif (str_starts_with($oOriginal,$sPrefix)) {
                     $oDest = 'Rodokmen/Import/' . $oNewTree . '/' . substr($oOriginal,strlen($sPrefix));
                 } else {
                     $oDest = 'Rodokmen/Obnova/' . $oNewTree . '/' . hash('sha256',$oOriginal) . '-' . basename($oOriginal);
@@ -334,7 +360,8 @@ function (int $nTreeId, string $sPath) use (&$oStagedPaths): void {
                 foreach ($aTables[$sTable] as $oRow) {
                     $oOld = (int)$oRow['id']; $oOldTree = (int)$oRow['tree_id'];
                     unset($oRow['id']); $oRow['tree_id'] = $oMaps['hc_familytree_trees'][$oOldTree];
-                    $oOldStable=(string)$oRow['stable_id'];$oRow['stable_id']=ResearchJournalService::uid();
+                    $oOldStable=(string)$oRow['stable_id'];
+                    $oRow['stable_id']=$oStableMaps[$oOldTree][$oOldStable]??ResearchJournalService::uid();
                     $oStableMaps[$oOldTree][$oOldStable]=$oRow['stable_id'];
                     if ($sTable === 'hc_familytree_shares') {
                         $sType = (string)$oRow['share_type']; $oWith = (string)$oRow['share_with'];
@@ -364,6 +391,12 @@ function (int $nTreeId, string $sPath) use (&$oStagedPaths): void {
                         if (!empty($oRow['person_id'])) $oRow['person_id']=$oMaps['hc_familytree_people'][$oRow['person_id']];
                         $sPath=(string)($oRow['file_path']??'');
                         if ($sPath!=='' && isset($oPathMaps[$oOldTree][ltrim($sPath,'/')])) $oRow['file_path']=$oPathMaps[$oOldTree][ltrim($sPath,'/')];
+                        // CZ: U fotografického dokumentu obnovit i cestu k výřezu.
+                        if (($oRow['document_type'] ?? '') === 'person_photo') {
+                            $sPortrait = (string)($oRow['source'] ?? '');
+                            if ($sPortrait !== '' && isset($oPathMaps[$oOldTree][ltrim($sPortrait,'/')]))
+                                $oRow['source'] = $oPathMaps[$oOldTree][ltrim($sPortrait,'/')];
+                        }
                     } elseif ($sTable==='hc_familytree_doc_links') {
                         $oRow['document_id']=$oMaps['hc_familytree_documents'][$oRow['document_id']];
                         $oTarget=['person'=>'hc_familytree_people','event'=>'hc_familytree_events','relation'=>'hc_familytree_relations'][$oRow['link_type']];

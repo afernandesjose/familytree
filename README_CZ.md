@@ -1,4 +1,4 @@
-# Rodokmen (FamilyTree) 1.1.7 pro Nextcloud
+# Rodokmen (FamilyTree) 1.1.10 pro Nextcloud
 
 **Jazyk:** [English](README.md) · Česky
 
@@ -7,6 +7,8 @@
 ![Rodokmen — hlavní obrazovka aplikace](screenshot/01.png)
 
 Snímky pro App Store jsou uložené samostatně v kořenové složce `screenshot/` na GitHubu, nikoli v podepsané aplikaci. Nainstalovaná aplikace si zachovává schválenou ikonu `img/app.svg`.
+
+**Oprava 1.1.10:** Portréty osob ve stromu se správně obnovují z místní galerie i po překreslení a po uložení údajů osoby. Původní fotografie zůstávají beze změny. **Od 1.1.9:** V levém panelu můžete odemknout pořadí rodokmenů, přesunout je myší, dotykem nebo šipkami a pořadí opět zamknout. Pořadí se ukládá k uživatelskému účtu na serveru, nikoli pouze do prohlížeče. V **Nastavení → Seznam a úvodní rodokmen** si uživatel zvolí vlastní úvodní rodokmen, nebo převezme výchozí volbu správce. Nepřístupný výchozí rodokmen se bezpečně nahradí prvním dostupným.
 
 ## Doporučená instalace — pro běžné uživatele
 
@@ -45,6 +47,7 @@ Také `uninstall.sh` je specializovaný nástroj pro vývojáře/správce v tomt
 
 - Interaktivní rodokmeny: posouvání, přibližování, osoby, příbuzenské vztahy, události a poznámky
 - Import GEDCOM 7 (`.ged`), GEDZIP (`.gdz`); **nedestruktivní import badatelských nálezů do existujícího rodokmenu** (ZIP + průvodce + deník + důkazy); vlastní úplná záloha a obnova ZIP
+- **Soukromá galerie fotografií osoby:** nahrání JPG/PNG/WebP, ořez, otočení, volba hlavní fotografie, zachování originálu a export do úplné ZIP zálohy v2
 - Fotografie, dokumenty, prameny, citace a badatelský deník s úkoly, hledáním a důkazy
 - Sdílení s kontrolou přístupových práv uživatelů Nextcloudu
 - Responzivní rozhraní a katalogy 11 jazyků; výchozí jazyk a záložní překlad jsou anglické
@@ -57,6 +60,7 @@ Pro vyzkoušení importu je na GitHubu připravená složka **[examples/ – vzo
 
 - [Údaje a výměnné formáty](docs/cz/03_DATA.md)
 - [Vlastní ZIP v2 a obnova vs. GEDCOM](docs/cz/IMPORT_EXPORT_ZALOHA.md)
+- [Fotografie osob: nahrání, úprava a zálohování](docs/cz/FOTOGRAFIE_OSOB.md)
 - [Formáty importu a exportu](docs/cz/FORMATY_IMPORT_EXPORT.md)
 - [Import nálezů do existujícího rodokmenu](docs/cz/IMPORT_NALEZU_DO_STAVAJICIHO_RODOKMENU.md)
 - [Shared App Core](docs/cz/02_CORE.md)
@@ -68,7 +72,7 @@ Vlastní úplná záloha FamilyTree ZIP není totéž co výměnný formát GEDC
 
 Veřejný **GitHub zdrojový ZIP** obsahuje `src/` s úplnou aplikací, veřejné návody v `docs/`, obrázky, licenci, changelogy a potřebné instalační a sestavovací skripty. Záměrně neobsahuje soukromé klíče, konfigurace, interní HDS/CP21 auditní podklady, provozní logy ani testovací protokoly.
 
-Příkaz `sh build-release.sh` vytvoří **nepodepsaný běhový ZIP** (`release/hc_familytree-1.1.7.zip`) požadovaný Publisherem CP21, **nepodepsaný přípravný TAR.GZ** a právě jeden čistý zdrojový archiv **`release/hc_familytree-1.1.7-full-source.zip`**. **Sám nic nepodepisuje ani nezveřejňuje.** Teprve Hacesoft Publisher provede závazné kontroly, podepíše aplikaci certifikátem Nextcloudu a připraví finální TAR.GZ včetně podpisu archivu pro Nextcloud App Store.
+Příkaz `sh build-release.sh` vytvoří **nepodepsaný běhový ZIP** (`release/hc_familytree-1.1.10.zip`) požadovaný Publisherem CP21, **nepodepsaný přípravný TAR.GZ** a právě jeden čistý zdrojový archiv **`release/hc_familytree-1.1.10-full-source.zip`**. **Sám nic nepodepisuje ani nezveřejňuje.** Teprve Hacesoft Publisher provede závazné kontroly, podepíše aplikaci certifikátem Nextcloudu a připraví finální TAR.GZ včetně podpisu archivu pro Nextcloud App Store.
 
 **Licence:** [AGPL-3.0-or-later](LICENSE). Chyby hlaste přes [GitHub Issues](https://github.com/hacesoft/familytree/issues).
 

@@ -1,3 +1,25 @@
+## 1.1.10 (2026-11-17)
+- Oprava portrétů ve stromu: bezpečné načtení hlavní fotografie z galerie nebo první dostupné fotografie, i při starém či prázdném odkazu photo_url.
+- Uložení osoby již nepřepíše lokálně spravovaný portrét z dříve otevřeného formuláře.
+- Vylepšen fallback chráněného API portrétu. Originály a ZIP záloha zůstávají zachovány.
+
+
+## 1.1.9 – 2026-11-17
+
+- Per-user persisted tree ordering (lockable mouse/touch/keyboard controls).
+- Administrator default and personal startup tree override; access-checked fallback.
+- No genealogy schema or backup-format changes. NAS/Publisher tests pending.
+
+## 1.1.8 – 2026-11-17
+
+- Add a private, person-linked photo gallery: multiple images, main portrait selection, crop/rotation and re-editing of previews while preserving original images.
+- Store images in owner-controlled Nextcloud Files under `Rodokmen/Fotografie/<tree>/<stable-person-id>/<photo-id>/` with access-checked image endpoints for shared trees.
+- Extend native ZIP v2 export and restore to include original files and edited portraits, remap person and tree paths on restore; retain 13-table schema and formatVersion 2.
+- Prevent generic document editing from changing managed photo records; preserve legacy external photo URL support.
+- Add image upload validation (JPEG/PNG/WebP, 12 MiB originals; square JPEG preview, 4 MiB), localized controls and new browser cache keys.
+- No changes to GEDCOM 7/GEDZIP exchange formats, approved artwork or screenshot references.
+- Candidate for NAS/PubIisher testing; clean Nextcloud install, backup/restore and UI scenarios require verification before public release.
+
 ## 1.1.7 – 2026-11-17
 
 - Finalize the 1.1.7 candidate based on the NAS-verified export behavior.

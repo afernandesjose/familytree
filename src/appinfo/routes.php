@@ -1,6 +1,9 @@
 <?php
 return ['routes'=>[
  ['name'=>'page#index','url'=>'/','verb'=>'GET'],
+ ['name'=>'genealogy#treePreferences','url'=>'/api/preferences','verb'=>'GET'],
+ ['name'=>'genealogy#updateTreePreferences','url'=>'/api/preferences','verb'=>'PUT'],
+ ['name'=>'genealogy#updateAdminStartTree','url'=>'/api/preferences/admin','verb'=>'PUT'],
  ['name'=>'genealogy#trees','url'=>'/api/trees','verb'=>'GET'],['name'=>'genealogy#createTree','url'=>'/api/trees','verb'=>'POST'],['name'=>'genealogy#deleteAllTrees','url'=>'/api/trees','verb'=>'DELETE'],
  ['name'=>'genealogy#dashboard','url'=>'/api/dashboard','verb'=>'GET'],
  ['name'=>'genealogy#treeStatistics','url'=>'/api/trees/{treeId}/statistics','verb'=>'GET'],
@@ -34,5 +37,11 @@ return ['routes'=>[
  ['name'=>'genealogy#exportNative','url'=>'/api/backups/native','verb'=>'GET'],
  ['name'=>'genealogy#previewNative','url'=>'/api/backups/native/preview','verb'=>'POST'],
  ['name'=>'genealogy#importNative','url'=>'/api/backups/native/import','verb'=>'POST'],
+ ['name'=>'photo#upload','url'=>'/api/people/{personId}/photos','verb'=>'POST'],
+ ['name'=>'photo#portrait','url'=>'/api/people/{personId}/portrait','verb'=>'GET'],
+ ['name'=>'photo#image','url'=>'/api/people/{personId}/photos/{photoId}/{variant}','verb'=>'GET'],
+ ['name'=>'photo#replacePortrait','url'=>'/api/people/{personId}/photos/{photoId}/portrait','verb'=>'POST'],
+ ['name'=>'photo#primary','url'=>'/api/people/{personId}/photos/{photoId}/primary','verb'=>'PUT'],
+ ['name'=>'photo#delete','url'=>'/api/people/{personId}/photos/{photoId}','verb'=>'DELETE'],
  ['name'=>'genealogy#researchMedia','url'=>'/api/research/media/{id}','verb'=>'GET'],
 ]];

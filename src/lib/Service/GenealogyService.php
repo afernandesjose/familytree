@@ -9,7 +9,7 @@ declare(strict_types=1);
  * Nextcloud API names are stable contractual identifiers.
  */
 namespace OCA\HcFamilyTree\Service;
-use OCP\AppFramework\Http\DataResponse; use OCP\AppFramework\Http\JSONResponse; use OCP\AppFramework\Http\Response; use OCP\IDBConnection; use OCP\IGroupManager; use OCP\IL10N; use OCP\IRequest; use OCP\IUserManager; use OCP\IUserSession;
+use OCP\IConfig; use OCP\AppFramework\Http\DataResponse; use OCP\AppFramework\Http\JSONResponse; use OCP\AppFramework\Http\Response; use OCP\IDBConnection; use OCP\IGroupManager; use OCP\IL10N; use OCP\IRequest; use OCP\IUserManager; use OCP\IUserSession;
 class GenealogyService {
  private string $sUid;
  /**
@@ -26,9 +26,10 @@ class GenealogyService {
  * @param FamilyTreeStatisticsService $oStatistics Vstupní parametr „statistics“ pro operaci __construct.
  * @param ResearchJournalImportService $oJournalImport Import strukturovaného deníku.
  * @param FindingsMergeService $oFindingsMerge Nedestruktivní slučování nálezů.
+ * @param PersonPhotoService $oPhotos Služba soukromé galerie fotografií osoby.
  * @return void Konstruktor nevrací návratovou hodnotu.
  */
-public function __construct(private IRequest $oRequest,private IDBConnection $oDb,IUserSession $oUs,private IGroupManager $oGroups,private IUserManager $oUsers,private IL10N $oL10n,private ResearchImportService $oResearch,private NativeArchiveService $oNative,private ResearchJournalService $oJournal,private FamilyTreeStatisticsService $oStatistics,private ResearchJournalImportService $oJournalImport,private FindingsMergeService $oFindingsMerge){$this->sUid=$oUs->getUser()?->getUID()??'';}
+public function __construct(private IRequest $oRequest,private IDBConnection $oDb,IUserSession $oUs,private IGroupManager $oGroups,private IUserManager $oUsers,private IConfig $oConfig,private IL10N $oL10n,private ResearchImportService $oResearch,private NativeArchiveService $oNative,private ResearchJournalService $oJournal,private FamilyTreeStatisticsService $oStatistics,private ResearchJournalImportService $oJournalImport,private FindingsMergeService $oFindingsMerge,private PersonPhotoService $oPhotos){$this->sUid=$oUs->getUser()?->getUID()??'';}
  /**
  * @brief Načte seznam databázových záznamů odpovídajících sloupcovým podmínkám.
  * @param string $sTable Název databázové tabulky.
@@ -150,6 +151,108 @@ fn($oP)=>['id'=>$oP['id'],'name'=>trim($oP['given_name'].' '.$oP['surname']),'bi
  * @return mixed Výsledek callbacku pro volající operaci.
  */
 fn($nA,$aB)=>(int)$aB['updated_at']<=>(int)$nA['updated_at']);return new DataResponse($bVisible);}
+  /**
+   * @brief Vrátí ID rodokmenů dostupných aktuálnímu uživateli.
+   * @return array Pole číselných identifikátorů; neobsahuje nepřístupné stromy.
+   */
+  private function visibleTreeIds():array {
+   $aIds=[];
+   foreach($this->rows('hc_familytree_trees') as $oTree){
+    $nTree=(int)$oTree['id'];
+    if($this->can($nTree))$aIds[]=$nTree;
+   }
+   return $aIds;
+  }
+
+  /**
+   * @brief Vrátí osobní pořadí a pravidla pro úvodní rodokmen (s bezpečným omezením na dostupné stromy).
+   * @return DataResponse Uživatelská nastavení a případná nastavení administrátora.
+   */
+  public function treePreferences():DataResponse {
+   if($this->sUid==='')return $this->deny();
+   $aAllowed=$this->visibleTreeIds();
+   $aRaw=json_decode($this->oConfig->getUserValue($this->sUid,'hc_familytree','tree_order','[]'),true);
+   if(!is_array($aRaw))$aRaw=[];
+   $aOrder=[];
+   foreach($aRaw as $oId){
+    if(!is_int($oId)&&!is_string($oId))continue;
+    if(!preg_match('/^[0-9]{1,12}$/',(string)$oId))continue;
+    $nId=(int)$oId;
+    if(in_array($nId,$aAllowed,true)&&!in_array($nId,$aOrder,true))$aOrder[]=$nId;
+   }
+   $nUser=(int)$this->oConfig->getUserValue($this->sUid,'hc_familytree','start_tree_id','0');
+   $nGlobal=(int)$this->oConfig->getAppValue('hc_familytree','admin_start_tree_id','0');
+   // Do not expose inaccessible tree identifiers to other users.
+   $nUser=in_array($nUser,$aAllowed,true)?$nUser:0;
+   $nGlobal=in_array($nGlobal,$aAllowed,true)?$nGlobal:0;
+   return new DataResponse([
+    'treeOrder'=>$aOrder,
+    'orderLocked'=>$this->oConfig->getUserValue($this->sUid,'hc_familytree','tree_order_locked','1')!=='0',
+    'userStartTreeId'=>$nUser,
+    'adminStartTreeId'=>$nGlobal,
+    'startTreeId'=>$nUser?:$nGlobal,
+    'isAdmin'=>$this->oGroups->isAdmin($this->sUid),
+   ]);
+  }
+
+  /**
+   * @brief Uloží vlastní pořadí rodokmenů, zámek a přepis úvodního stromu aktuálního uživatele.
+   * @return DataResponse Nová platná uživatelská nastavení nebo chybová odpověď.
+   */
+  public function updateTreePreferences():DataResponse {
+   if($this->sUid==='')return $this->deny();
+   $aBody=$this->body();
+   $aAllowed=$this->visibleTreeIds();
+   $aOrder=null;$bLocked=null;$nUser=null;
+   // Validate every supplied setting before any write (no partially applied preference updates).
+   if(array_key_exists('treeOrder',$aBody)){
+    if($this->oConfig->getUserValue($this->sUid,'hc_familytree','tree_order_locked','1')!=='0')
+     return new JSONResponse(['error'=>$this->oL10n->t('Unlock tree ordering before moving family trees.')],409);
+    if(!is_array($aBody['treeOrder'])||count($aBody['treeOrder'])>500)
+     return new JSONResponse(['error'=>$this->oL10n->t('Invalid family tree order.')],400);
+    $aOrder=[];
+    foreach($aBody['treeOrder'] as $oId){
+     if(!(is_int($oId)||is_string($oId))||!preg_match('/^[1-9][0-9]{0,11}$/',(string)$oId))
+      return new JSONResponse(['error'=>$this->oL10n->t('Invalid family tree order.')],400);
+     $nId=(int)$oId;
+     if(!in_array($nId,$aAllowed,true)||in_array($nId,$aOrder,true))
+      return new JSONResponse(['error'=>$this->oL10n->t('Invalid family tree order.')],400);
+     $aOrder[]=$nId;
+    }
+   }
+   if(array_key_exists('orderLocked',$aBody)){
+    if(!is_bool($aBody['orderLocked']))return new JSONResponse(['error'=>$this->oL10n->t('Invalid ordering lock setting.')],400);
+    $bLocked=$aBody['orderLocked'];
+   }
+   if(array_key_exists('userStartTreeId',$aBody)){
+    $oId=$aBody['userStartTreeId'];
+    if(!(is_int($oId)||is_string($oId))||!preg_match('/^(0|[1-9][0-9]{0,11})$/',(string)$oId))
+     return new JSONResponse(['error'=>$this->oL10n->t('Invalid startup family tree.')],400);
+    $nUser=(int)$oId;
+    if($nUser!==0&&!in_array($nUser,$aAllowed,true))return $this->deny();
+   }
+   if($aOrder!==null)$this->oConfig->setUserValue($this->sUid,'hc_familytree','tree_order',json_encode($aOrder,JSON_THROW_ON_ERROR));
+   if($bLocked!==null)$this->oConfig->setUserValue($this->sUid,'hc_familytree','tree_order_locked',$bLocked?'1':'0');
+   if($nUser!==null)$this->oConfig->setUserValue($this->sUid,'hc_familytree','start_tree_id',(string)$nUser);
+   return $this->treePreferences();
+  }
+
+  /**
+   * @brief Uloží globální výchozí rodokmen; změnu smí provést jen administrátor Nextcloudu.
+   * @return DataResponse Ověřená nastavení po změně nebo zakázaný požadavek.
+   */
+  public function updateAdminStartTree():DataResponse {
+   if($this->sUid===''||!$this->oGroups->isAdmin($this->sUid))return $this->deny();
+   $aBody=$this->body();
+   $oId=$aBody['adminStartTreeId']??null;
+   if(!(is_int($oId)||is_string($oId))||!preg_match('/^(0|[1-9][0-9]{0,11})$/',(string)$oId))
+    return new JSONResponse(['error'=>$this->oL10n->t('Invalid startup family tree.')],400);
+   $nId=(int)$oId;
+   if($nId!==0&&!in_array($nId,$this->visibleTreeIds(),true))return $this->deny();
+   $this->oConfig->setAppValue('hc_familytree','admin_start_tree_id',(string)$nId);
+   return $this->treePreferences();
+  }
+
   /**
  * @brief Vytvoří tree pro oprávněně přístupný rodokmen.
  * @return DataResponse HTTP odpověď s výslednými daty nebo chybovou zprávou ve formátu JSON.
@@ -556,7 +659,23 @@ fn($nA,$aB)=>(int)$aB['updated_at']<=>(int)$nA['updated_at']);return new DataRes
  * @param int $nId Identifikátor cílového záznamu.
  * @return DataResponse HTTP odpověď s výslednými daty nebo chybovou zprávou ve formátu JSON.
  */
-  public function updatePerson(int $nId):DataResponse{$oP=$this->row('hc_familytree_people',$nId);if(!$oP||!$this->can((int)$oP['tree_id'],true))return $this->deny();$oD=$this->personData($this->body());if(trim($oD['given_name'])===''&&trim($oD['surname'])==='')return new JSONResponse(['error'=>$this->oL10n->t('Enter a first or last name.')],400);$oD['updated_at']=time();$this->update('hc_familytree_people',$nId,$oD);return new DataResponse($this->row('hc_familytree_people',$nId));}
+  public function updatePerson(int $nId):DataResponse{
+   $oP=$this->row('hc_familytree_people',$nId);
+   if(!$oP||!$this->can((int)$oP['tree_id'],true))return $this->deny();
+   $oD=$this->personData($this->body());
+   if(trim($oD['given_name'])===''&&trim($oD['surname'])==='')
+    return new JSONResponse(['error'=>$this->oL10n->t('Enter a first or last name.')],400);
+   // CZ: Uložený hlavní portrét spravuje výhradně PhotoController. Starý otevřený
+   // formulář nesmí po změně fotografie smazat nebo vrátit původní lokální cestu.
+   $sCurrentPhoto=(string)($oP['photo_url']??'');
+   if(str_starts_with($sCurrentPhoto,'Rodokmen/'))$oD['photo_url']=$sCurrentPhoto;
+   // CZ: Lokální cestu nelze nasadit běžným JSON formulářem; pouze bezpečným
+   // uploadem, volbou hlavní fotografie nebo interní obnovou archivu.
+   elseif(str_starts_with($oD['photo_url'],'Rodokmen/'))$oD['photo_url']=$sCurrentPhoto;
+   $oD['updated_at']=time();
+   $this->update('hc_familytree_people',$nId,$oD);
+   return new DataResponse($this->row('hc_familytree_people',$nId));
+  }
 
   /**
  * @brief Vytvoří child používané v GenealogyService.
@@ -667,7 +786,7 @@ fn($nA,$aB)=>(int)$aB['updated_at']<=>(int)$nA['updated_at']);return new DataRes
  * @param int $nId Identifikátor cílového záznamu.
  * @return DataResponse HTTP odpověď s výslednými daty nebo chybovou zprávou ve formátu JSON.
  */
-  public function deletePerson(int $nId):DataResponse{$oP=$this->row('hc_familytree_people',$nId);if(!$oP||!$this->can((int)$oP['tree_id'],true))return $this->deny();$this->deleteLinksFor('person',$nId);foreach($this->rows('hc_familytree_events',['person_id'=>$nId]) as $oE)$this->deleteLinksFor('event',(int)$oE['id']);foreach($this->rows('hc_familytree_relations',['tree_id'=>$oP['tree_id']]) as $oR)if((int)$oR['person1_id']===$nId||(int)$oR['person2_id']===$nId)$this->deleteLinksFor('relation',(int)$oR['id']);foreach($this->rows('hc_familytree_events',['person_id'=>$nId]) as $oEvent)$this->delete('hc_familytree_events',(int)$oEvent['id']);foreach($this->rows('hc_familytree_relations',['tree_id'=>$oP['tree_id']]) as $oRelation)if((int)$oRelation['person1_id']===$nId||(int)$oRelation['person2_id']===$nId)$this->delete('hc_familytree_relations',(int)$oRelation['id']);$this->delete('hc_familytree_people',$nId);return new DataResponse(['ok'=>true]);}
+  public function deletePerson(int $nId):DataResponse{$oP=$this->row('hc_familytree_people',$nId);if(!$oP||!$this->can((int)$oP['tree_id'],true))return $this->deny();$this->deleteLinksFor('person',$nId);foreach($this->rows('hc_familytree_events',['person_id'=>$nId]) as $oE)$this->deleteLinksFor('event',(int)$oE['id']);foreach($this->rows('hc_familytree_relations',['tree_id'=>$oP['tree_id']]) as $oR)if((int)$oR['person1_id']===$nId||(int)$oR['person2_id']===$nId)$this->deleteLinksFor('relation',(int)$oR['id']);foreach($this->rows('hc_familytree_events',['person_id'=>$nId]) as $oEvent)$this->delete('hc_familytree_events',(int)$oEvent['id']);foreach($this->rows('hc_familytree_relations',['tree_id'=>$oP['tree_id']]) as $oRelation)if((int)$oRelation['person1_id']===$nId||(int)$oRelation['person2_id']===$nId)$this->delete('hc_familytree_relations',(int)$oRelation['id']);$this->oPhotos->removeForPerson($oP);$this->delete('hc_familytree_people',$nId);return new DataResponse(['ok'=>true]);}
   /**
  * @brief Vytvoří relation používané v GenealogyService.
  * @param int $nTreeId Identifikátor rodokmenu.
@@ -724,13 +843,13 @@ fn($nA,$aB)=>(int)$aB['updated_at']<=>(int)$nA['updated_at']);return new DataRes
  * @param int $nId Identifikátor cílového záznamu.
  * @return DataResponse HTTP odpověď s výslednými daty nebo chybovou zprávou ve formátu JSON.
  */
-  public function updateDocument(int $nId):DataResponse{$oOld=$this->row('hc_familytree_documents',$nId);if(!$oOld||!$this->can((int)$oOld['tree_id'],true))return $this->deny();$aB=$this->body();$oD=$this->documentData($aB);if($oD['title']===''||$oD['file_path']==='')return new JSONResponse(['error'=>$this->oL10n->t('A title and a file are required.')],400);$oD['updated_at']=time();$this->update('hc_familytree_documents',$nId,$oD);$this->saveDocumentLinks($nId,(int)$oOld['tree_id'],(array)($aB['links']??[]));return new DataResponse(['document'=>$this->row('hc_familytree_documents',$nId),'links'=>$this->rows('hc_familytree_doc_links',['document_id'=>$nId])]);}
+  public function updateDocument(int $nId):DataResponse{$oOld=$this->row('hc_familytree_documents',$nId);if(!$oOld||!$this->can((int)$oOld['tree_id'],true))return $this->deny();$aB=$this->body();if(($oOld['document_type']??'')==='person_photo'&&str_starts_with((string)($oOld['source']??''),'Rodokmen/'))return new JSONResponse(['error'=>'Use the person photo gallery to manage photographs.'],409);$oD=$this->documentData($aB);if($oD['title']===''||$oD['file_path']==='')return new JSONResponse(['error'=>$this->oL10n->t('A title and a file are required.')],400);$oD['updated_at']=time();$this->update('hc_familytree_documents',$nId,$oD);$this->saveDocumentLinks($nId,(int)$oOld['tree_id'],(array)($aB['links']??[]));return new DataResponse(['document'=>$this->row('hc_familytree_documents',$nId),'links'=>$this->rows('hc_familytree_doc_links',['document_id'=>$nId])]);}
   /**
  * @brief Odstraní document používané v GenealogyService.
  * @param int $nId Identifikátor cílového záznamu.
  * @return DataResponse HTTP odpověď s výslednými daty nebo chybovou zprávou ve formátu JSON.
  */
-  public function deleteDocument(int $nId):DataResponse{$oD=$this->row('hc_familytree_documents',$nId);if(!$oD||!$this->can((int)$oD['tree_id'],true))return $this->deny();$oQ=$this->oDb->getQueryBuilder();$oQ->delete('hc_familytree_doc_links')->where($oQ->expr()->eq('document_id',$oQ->createNamedParameter($nId)))->executeStatement();$this->delete('hc_familytree_documents',$nId);return new DataResponse(['ok'=>true]);}
+  public function deleteDocument(int $nId):DataResponse{$oD=$this->row('hc_familytree_documents',$nId);if(!$oD||!$this->can((int)$oD['tree_id'],true))return $this->deny();if(($oD['document_type']??'')==='person_photo'&&str_starts_with((string)($oD['source']??''),'Rodokmen/'))return new JSONResponse(['error'=>'Use the person photo gallery to remove photographs.'],409);$oQ=$this->oDb->getQueryBuilder();$oQ->delete('hc_familytree_doc_links')->where($oQ->expr()->eq('document_id',$oQ->createNamedParameter($nId)))->executeStatement();$this->delete('hc_familytree_documents',$nId);return new DataResponse(['ok'=>true]);}
   /**
  * @brief Uloží share používané v GenealogyService.
  * @param int $nTreeId Identifikátor rodokmenu.

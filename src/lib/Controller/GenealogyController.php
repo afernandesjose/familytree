@@ -49,6 +49,13 @@ public function __construct(IRequest $oRequest, private GenealogyService $oServi
  * @return DataResponse HTTP odpověď s výslednými daty nebo chybovou zprávou ve formátu JSON.
  */
     #[NoAdminRequired] public function trees(): DataResponse { return $this->oService->trees(); }
+    /** @brief Načte osobní pořadí a výchozí rodokmen. @return DataResponse Nastavení uživatele. */
+    #[NoAdminRequired] public function treePreferences(): DataResponse { return $this->oService->treePreferences(); }
+    /** @brief Uloží pořadí, zámek a osobní úvodní strom. @return DataResponse Aktualizované nastavení. */
+    #[NoAdminRequired] public function updateTreePreferences(): DataResponse { return $this->oService->updateTreePreferences(); }
+    /** @brief Uloží administrátorský výchozí rodokmen. @return DataResponse Aktualizované nastavení. */
+    #[NoAdminRequired] public function updateAdminStartTree(): DataResponse { return $this->oService->updateAdminStartTree(); }
+
     /**
  * @brief Spustí odstranění rodokmenů vlastněných aktuálním uživatelem.
  * @return DataResponse HTTP odpověď s výslednými daty nebo chybovou zprávou ve formátu JSON.

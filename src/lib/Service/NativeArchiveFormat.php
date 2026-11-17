@@ -180,6 +180,20 @@ function (string $sTable, mixed $sTargetId, mixed $nTreeId) use ($oOwnerTree): b
                 throw new \InvalidArgumentException('The document file is missing from the backup: ' . $oP);
             }
         }
+        // CZ: Nativní záloha fotografie v2 musí obsahovat původní soubor i
+        // náhled. Bez nich by obnovení galerie vypadalo úspěšně, ale nefungovalo.
+        foreach ($aTables['hc_familytree_documents'] as $oDoc) {
+            if (($oDoc['document_type'] ?? '') !== 'person_photo') continue;
+            $sPortrait = (string)($oDoc['source'] ?? '');
+            // Historické dokumenty mohou mít person_photo jako volný typ
+            // a zdrojové pole například jako bibliografickou citaci.
+            if (!str_starts_with($sPortrait, 'Rodokmen/Fotografie/')
+                && !str_starts_with($sPortrait, 'Rodokmen/Obnova/')) continue;
+            if ($sPortrait === '' || !self::safePath($sPortrait)
+                || !isset($oPaths[$oDoc['tree_id']][$sPortrait])) {
+                throw new \InvalidArgumentException('The cropped person portrait is missing from the backup.');
+            }
+        }
         foreach ($aTables['hc_familytree_research'] as $oR) {
             if (($oR['media_path'] ?? '') !== '' && !isset($oPaths[$oR['tree_id']][ltrim((string)$oR['media_path'],'/')])) {
                 throw new \InvalidArgumentException('Research media is missing from backup.');

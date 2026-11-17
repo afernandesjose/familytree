@@ -1,3 +1,26 @@
+## 1.1.10 (2026-11-17)
+- Opraveno mizení portrétů po překreslení rodokmenu. Při chybějícím/zastaralém odkazu se použije fotografie evidovaná v galerii.
+- Ochrana při současné editaci osoby, aby starší formulář nesmazal odkaz na hlavní místní portrét.
+- Opraven fallback soukromého API pro obrázek osoby.
+
+
+## 1.1.9 – 2026-11-17
+
+- Ukládání vlastního pořadí rodokmenů na serveru pro každého uživatele; zámek/odemknutí přetahování a úchyty pro myš, dotyk i klávesnici.
+- Úvodní rodokmen: osobní přepis volby správce, bezpečný přechod na první přístupný rodokmen, validace práv pro společný výchozí strom.
+- Oddělená nastavení aplikace, beze změn genealogické databáze, formátů GEDCOM a úplné ZIP zálohy.
+- Testovací vydání pro NAS; před vydáním je vyžadován CP21/HDS a ověření rozhraní.
+
+## 1.1.8 – 2026-11-17
+
+- Soukromá galerie více fotografií u osoby: hlavní portrét, ořez, otočení, dodatečná úprava výřezu při zachování originálního snímku.
+- Obrázky v soukromém Nextcloud Files vlastníka rodokmenu, tříděné podle stromu a stabilního ID osoby; autorizované URL funguje i u sdíleného stromu.
+- Úplná nativní ZIP záloha v2 zahrnuje originály i výřezy a při obnově mapuje nové ID stromů a osob. Zachováno 13 tabulek a formatVersion 2.
+- Ochrana fotografických dokumentů před úpravou přes obecné API dokumentů; externí odkazy na fotografie zůstávají kompatibilní.
+- Kontrola nahrávaných JPEG/PNG/WebP (originál max. 12 MiB, čtvercový JPEG náhled max. 4 MiB), překlady ovládání a nové cache názvy.
+- Beze změn GEDCOM 7/GEDZIP, schválené ikony a screenshotových URL.
+- Testovací kandidát pro NAS/Publisher; před veřejným vydáním ověřit instalaci, scénáře galerie a úplnou obnovu.
+
 ## 1.1.7 – 2026-11-17
 
 - Opraven import podle GitHub issue #1: explicitní návratové klíče v `ResearchImportService::validate()` místo neplatného `compact()`. Přidán spustitelný regresní test.

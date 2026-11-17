@@ -1,3 +1,26 @@
+## 1.1.10 (2026-11-17)
+- Fixed portrait disappearing from tree cards after re-render: select the locally managed gallery photo even when photo_url is empty or outdated.
+- Prevent editing a person from overwriting the local portrait reference with stale form data.
+- Added safe fallback to the first stored gallery photo in the protected portrait endpoint.
+
+
+## 1.1.9 – 2026-11-17
+
+- Per-user persistent tree order with lockable drag handles for mouse, touch and keyboard.
+- Startup tree: administrator default with a per-user override and safe fallback to an accessible tree.
+- Uses Nextcloud app/user preferences, without changes to genealogy tables or native backups.
+- NAS test candidate; UI verification and CP21/HDS publication checks remain pending.
+
+## 1.1.8 – 2026-11-17
+
+- Add a private, person-linked photo gallery: multiple images, main portrait selection, crop/rotation and re-editing of previews while preserving original images.
+- Store images in owner-controlled Nextcloud Files under `Rodokmen/Fotografie/<tree>/<stable-person-id>/<photo-id>/` with access-checked image endpoints for shared trees.
+- Extend native ZIP v2 export and restore to include original files and edited portraits, remap person and tree paths on restore; retain 13-table schema and formatVersion 2.
+- Prevent generic document editing from changing managed photo records; preserve legacy external photo URL support.
+- Add image upload validation (JPEG/PNG/WebP, 12 MiB originals; square JPEG preview, 4 MiB), localized controls and new browser cache keys.
+- No changes to GEDCOM 7/GEDZIP exchange formats, approved artwork or screenshot references.
+- Candidate for NAS/PubIisher testing; clean Nextcloud install, backup/restore and UI scenarios require verification before public release.
+
 ## 1.1.7 – 2026-11-17
 
 - Fix GitHub issue #1: the research import preview now maps H05-prefixed PHP variables to the correct stable response keys instead of using invalid `compact()` names; executable regression test added.
