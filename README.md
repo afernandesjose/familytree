@@ -6,15 +6,17 @@
 
 ## Screenshots
 
-The original screenshots are hosted on GitHub. Only links are listed here; image files are not included or embedded in this documentation.
+The following screenshots are displayed directly from the existing GitHub `screenshot/` directory. No PNG files are bundled with the application or source archives.
 
-- [Screenshot 01 – Family tree overview](https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/01.png)
-- [Screenshot 02 – Research journal](https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/02.png)
-- [Screenshot 03 – Registers and photographs](https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/03.png)
+![Screenshot 01 – Family tree overview](https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/01.png)
 
-App Store screenshots are hosted separately in the GitHub repository root `screenshot/` directory. They are linked externally and not distributed inside the signed Nextcloud app. The installed app keeps its approved `img/app.svg` icon.
+![Screenshot 02 – Research journal](https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/02.png)
 
-**Documentation updated in 1.2.0:** The README lists the three GitHub-hosted screenshots as links rather than embedding images. No PNG assets are added to the application.
+![Screenshot 03 – Registers and photographs](https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/03.png)
+
+The Nextcloud App Store references these same external screenshots through `appinfo/info.xml`. They are not distributed inside the signed Nextcloud app. The installed app keeps its approved `img/app.svg` icon.
+
+**Documentation updated in 1.2.0:** The three original GitHub-hosted screenshots are displayed directly in the README via external image URLs. No PNG assets are added to the distribution archives.
 
 **New in 1.1.8:** Private per-person photo gallery with crop, rotation, primary portrait selection and original-image preservation. Images are stored in owner-controlled Nextcloud Files and included in native ZIP v2 backups. [Photo management guide](docs/en/PERSON_PHOTOS.md).
 

@@ -6,15 +6,17 @@
 
 ## Snímky obrazovky
 
-Originální snímky jsou uložené na GitHubu. Zde jsou pouze odkazy; obrázky nevkládáme do dokumentace ani do distribučních balíčků.
+Následující snímky se zobrazují přímo z existující složky `screenshot/` na GitHubu. Soubory PNG nejsou přibalené k aplikaci ani ke zdrojovým archivům.
 
-- [Snímek 01 – Přehled rodokmenu](https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/01.png)
-- [Snímek 02 – Výzkumný deník](https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/02.png)
-- [Snímek 03 – Matriky a fotografie](https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/03.png)
+![Snímek 01 – Přehled rodokmenu](https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/01.png)
 
-Snímky pro App Store jsou uložené samostatně v kořenové složce `screenshot/` na GitHubu, nikoli v podepsané aplikaci. Nainstalovaná aplikace si zachovává schválenou ikonu `img/app.svg`.
+![Snímek 02 – Výzkumný deník](https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/02.png)
 
-**Dokumentace ve verzi 1.2.0:** Přidány odkazy na všechny tři původní screenshoty na GitHubu, bez vkládání obrázků do README nebo vydávacích archivů.
+![Snímek 03 – Matriky a fotografie](https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/03.png)
+
+Nextcloud App Store používá stejné externí screenshoty uvedené v `appinfo/info.xml`. Nejsou součástí podepsané aplikace. Nainstalovaná aplikace si zachovává schválenou ikonu `img/app.svg`.
+
+**Dokumentace ve verzi 1.2.0:** V README se přímo zobrazují všechny tři původní screenshoty z GitHubu prostřednictvím externích URL. Žádné PNG soubory se do distribučních archivů nepřidávají.
 
 **Oprava 1.1.10:** Portréty osob ve stromu se správně obnovují z místní galerie i po překreslení a po uložení údajů osoby. Původní fotografie zůstávají beze změny. **Od 1.1.9:** V levém panelu můžete odemknout pořadí rodokmenů, přesunout je myší, dotykem nebo šipkami a pořadí opět zamknout. Pořadí se ukládá k uživatelskému účtu na serveru, nikoli pouze do prohlížeče. V **Nastavení → Seznam a úvodní rodokmen** si uživatel zvolí vlastní úvodní rodokmen, nebo převezme výchozí volbu správce. Nepřístupný výchozí rodokmen se bezpečně nahradí prvním dostupným.
 
