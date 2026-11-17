@@ -1,6 +1,6 @@
-# FamilyTree 1.1.6 for Nextcloud
+# FamilyTree 1.1.7 for Nextcloud
 
-[Česky](README_CZ.md) · [Installation](docs/en/01_INSTALLATION.md) · [Import, export and backup](docs/en/IMPORT_EXPORT_BACKUP.md) · [Changelog](CHANGELOG.en.md)
+**Language:** English · [Česky](README_CZ.md)
 
 **FamilyTree** is a self-hosted genealogy application for **Nextcloud 35**. Create and share family trees, people, relationships and events; manage photos, sources, documents and research notes; import GEDCOM 7 / GEDZIP; and keep your records in your own Nextcloud.
 
@@ -64,8 +64,12 @@ A native FamilyTree ZIP backup is distinct from GEDCOM exchange. Keep independen
 
 The **public GitHub source ZIP** contains `src/` (the complete runnable app), public `docs/`, license, changelogs and source deployment/build scripts. It intentionally excludes private keys, credentials, internal HDS/CP21 audit evidence, runtime logs and test reports.
 
-`sh build-release.sh` assembles an **unsigned runtime ZIP** (`release/hc_familytree-1.1.6.zip`) for Publisher CP21, an **unsigned staging TAR.GZ**, and exactly one clean **`release/hc_familytree-1.1.6-full-source.zip`** from this checkout; the build **does not sign or publish** a release. The release manager uses Hacesoft Publisher to run mandatory quality gates, sign the application with the registered Nextcloud certificate, and publish the final TAR.GZ and its archive signature to the App Store. The signed final artifact is not produced by this GitHub source ZIP alone.
+`sh build-release.sh` assembles an **unsigned runtime ZIP** (`release/hc_familytree-1.1.7.zip`) for Publisher CP21, an **unsigned staging TAR.GZ**, and exactly one clean **`release/hc_familytree-1.1.7-full-source.zip`** from this checkout; the build **does not sign or publish** a release. The release manager uses Hacesoft Publisher to run mandatory quality gates, sign the application with the registered Nextcloud certificate, and publish the final TAR.GZ and its archive signature to the App Store. The signed final artifact is not produced by this GitHub source ZIP alone.
 
 **License:** [AGPL-3.0-or-later](LICENSE). Report problems via [GitHub Issues](https://github.com/hacesoft/familytree/issues).
 
-**New in 1.1.6:** [Import research findings into an existing tree](docs/en/IMPORT_FINDINGS_INTO_EXISTING_TREE.md).
+**New in 1.1.7:** [Import research findings into an existing tree](docs/en/IMPORT_FINDINGS_INTO_EXISTING_TREE.md).
+
+## Changelog
+
+The version history is available in [the English changelog](CHANGELOG.en.md).

@@ -365,7 +365,23 @@ fn(array $aR): bool => str_contains(strtolower((string)$aR['verification_status'
         foreach (self::TYPES as $sType => $oUnusedType) if ($oNew[$sType] || $oChanged[$sType] || $oRemoved[$sType]) {
             $aChanges[$sType] = ['new' => $oNew[$sType], 'changed' => $oChanged[$sType], 'absent_in_file' => $oRemoved[$sType]];
         }
-        return compact('counts', 'new', 'unchanged', 'changed', 'removed', 'missing', 'available', 'remote', 'parentConflicts', 'unknownNotes', 'variants', 'changes');
+        // Explicitní mapování interních proměnných na stabilní veřejné klíče API.
+        // compact() zde nesmí být použit: proměnné jsou kvůli H05 pojmenované
+        // s prefixy ($oCounts, $oNew, ...), které neodpovídají názvům klíčů.
+        return [
+            'counts' => $oCounts,
+            'new' => $oNew,
+            'unchanged' => $oUnchanged,
+            'changed' => $oChanged,
+            'removed' => $oRemoved,
+            'missing' => $oMissing,
+            'available' => $oAvailable,
+            'remote' => $oRemote,
+            'parentConflicts' => $oParentConflicts,
+            'unknownNotes' => $oUnknownNotes,
+            'variants' => $oVariants,
+            'changes' => $aChanges,
+        ];
     }
 
     /**

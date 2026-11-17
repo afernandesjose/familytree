@@ -1,4 +1,4 @@
-# FamilyTree 1.1.6 – App Store screenshots
+# FamilyTree 1.1.7 – App Store screenshots
 
 The Nextcloud app icon is the owner-approved `src/img/app.svg`, installed as `img/app.svg`. Its bytes are unchanged.
 

@@ -1,11 +1,11 @@
-[🇨🇿 **Česky**](MOBILNI_LAYOUT.md) | [🇬🇧 English](../en/MOBILE_LAYOUT.md)
+# FamilyTree – mobilní zobrazení 1.1.7
 
-# Rodokmen: mobilní rozložení
+PC ovládání, pohled stromu, jeho příkazy a postranní lišta zůstávají beze změny.
 
-Verze: 1.1.0-dev7. Aplikace používá Layout API Shared App Core na Nextcloudu 35.
+Na dotykovém telefonu na výšku i na šířku zabírá strom téměř celou dostupnou plochu. U levého okraje je malé ouško **❯** pro výsuvný seznam rodokmenů. U pravého okraje je **⋯** pro všechny dostupné nástroje: hledání, zoom, přizpůsobení, nabídku aktuálního stromu, výzkumný deník, statistiky, importy/exporty i nastavení. Nabídka respektuje oprávnění – čtenář nevidí zápisové a mazací akce.
 
-Na telefonu tlačítko nabídky vysune seznam rodokmenů nad plátnem. Výběr stromu, zavírací tlačítko, klepnutí mimo nabídku i Escape ji zavřou. Strom se otevře u výchozí osoby v čitelném měřítku. Jedním prstem lze pohled posouvat, dvěma prsty zvětšovat či zmenšovat. Ikona ☷ vpravo nahoře na plátně otevírá nabídku pohledu s volbou Celý strom, 100 %, Uspořádat strom a výběrem skupiny. Změna měřítka nemění výšku zobrazovací plochy. Legenda je vpravo dole a za úchyt ⠿ ji lze přesunout; prohlížeč si místo pamatuje. Core určuje výšku aplikace a rozvržení; formuláře se při úzkém prostoru skládají do jednoho sloupce.
+Po klepnutí mimo nabídku nebo po výběru stromu se panel opět skryje. Šířka seznamu rodokmenů jde měnit tažením úzkého pravého okraje, při příští návštěvě se pamatuje. Dlouhé názvy se zkrátí třemi tečkami, plný název je v popisku tlačítka; při klávesnicovém zaměření lze text posouvat. Seznam rodokmenů se nezvětšuje do šířky.
 
-## Kontrola na telefonu
+**Gesta:** Jeden prst posouvá strom, dva prsty mění přiblížení. Krátké klepnutí na osobu otevírá její detail včetně čitelných souvisejících údajů. Přes detail osoby a nabídku aktuálního stromu se čtenář dostane do výzkumného deníku. Dotykové přemísťování karet osob se u výchozího nastavení neprovádí, aby nekolidovalo s posouváním plátna; správce ho může volitelně povolit v nastavení.
 
-Otevřete velký strom, zkontrolujte čitelnost výchozí osoby, oddalte jej až na celý strom a ověřte, že dole nevzniká pruh zmenšující plátno. Přibližte jej dvěma prsty, posuňte k okrajům a zpět. Přesuňte legendu, změňte měřítko a otevřete kartu osoby i dlouhý formulář.
+**Kontrolní scénáře:** 360×780, 390×844, 844×390, 932×430; otevření obou oušek, posun a pinch na kartě i na pozadí, klepnutí na osobu, přístup k deníku s oprávněním jen pro čtení, přepínání stromů, změna šířky panelu a dlouhé názvy. Desktopová regrese je samostatně vyžadována.

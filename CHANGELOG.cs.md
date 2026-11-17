@@ -1,4 +1,15 @@
+## 1.1.7 – 2026-11-11
+
+- Opraven import podle GitHub issue #1: explicitní návratové klíče v `ResearchImportService::validate()` místo neplatného `compact()`. Přidán spustitelný regresní test.
+- App Store: jediný odkaz Domovská stránka, bez opakovaných dokumentačních odkazů. README nahoře jen jazyková volba Česky / English.
+
+- Mobilní vylepšení z připravené vývojové větve: vysouvací panel rodokmenů a nástrojů, nastavitelné menu, gesta jedním/dvěma prsty, přístup čtenáře k deníku, úsporné rozložení na výšku i na šířku. Desktop beze změn.
+- Zvýšení verze kvůli již vydané 1.1.6; sjednoceny názvy JS/CSS, XML, PHP a dokumentace.
+- Ikona, screenshoty a odkazy pro Nextcloud App Store beze změny; obrázky nadále výhradně mimo distribuční archivy.
+
 ## 1.1.6 – 2026-11-11
+
+- Mobilní zobrazení na výšku i na šířku používá dvě malá výsuvná ouška, úspornou nabídku všech nástrojů, nastavitelnou šířku postranního panelu a opravené dotykové ovládání osob a rodokmenu. Čtenáři mají přístup k deníku. PC rozložení zůstává beze změny.
 
 - Screenshoty jsou nyní externě v kořenové složce `screenshot/` GitHubu a nejsou v běhové instalaci ani distribuovaných ZIPech. Metadata používají `screenshot/01.png` až `03.png`.
 - Schválená instalační ikona `img/app.svg` zůstává beze změny, doplněna kontrola SHA-256, struktury archivů a veřejných URL před publikací.

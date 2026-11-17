@@ -1,4 +1,15 @@
+## 1.1.7 – 2026-11-11
+
+- Oprava chyby importu nahlášené v GitHub issue #1: `ResearchImportService::validate()` nyní vrací všechny údaje náhledu explicitně pod správnými klíči; odstraněno chybné `compact()` používající názvy neexistujících proměnných.
+- Metadata App Storu: odstraněny tři redundantní odkazy na dokumentaci; v sekci Prostředky zůstává jediná domovská stránka. README v CZ/EN obsahuje jen přepínač jazyka v záhlaví, ostatní odkazy jsou v obsahu.
+
+- Zveřejnit mobilní a dotykové úpravy připravené v předchozím pracovním zdroji: výsuvné levé a pravé ouško, úsporné nástroje na výšku i na šířku, posouvání a přiblížení stromu dotykem, detail osoby klepnutím a dostupnost deníku pro čtenáře. Desktopová práce zůstává beze změn.
+- Nová verze po již publikované 1.1.6; sjednocena metadata, verzované JS/CSS, PHP odkazy, návody a testy.
+- Beze změn obrázků, externích URL `screenshot/01.png` až `03.png`, schválené ikony, databázového schématu a slučovacího importu.
+
 ## 1.1.6 – 2026-11-11
+
+- Mobilní režim na výšku i na šířku: dvě úzká vysouvací ouška místo trvale otevřených lišt, všechny oprávněné nástroje v jedné nabídce, výsuvný a šířkově nastavitelný seznam rodokmenů, čitelné dlouhé názvy. Dotykové posouvání, pinch a klepnutí na osobu oddělené; deník dostupný čtenářům. Desktop zůstává beze změn.
 
 - Schválené screenshoty `01.png`, `02.png`, `03.png` zůstanou výhradně v externí kořenové složce `screenshot/` na GitHubu. Změněny jen odkazy v `info.xml`, nikoli obsah obrázků.
 - Z veřejného zdrojového ZIPu a podepsané aplikace odstraněny screenshoty i nepotřebné doplňkové PNG; instalační ikona `img/app.svg` zůstává bitově nezměněná.

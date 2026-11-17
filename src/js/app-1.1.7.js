@@ -2323,7 +2323,7 @@ const hNavButton=fnValue('hc-familytree-open-nav'),oSidebar=fnValue('hc-familytr
 function setNavOpen(bOpen) { oSidebar.classList.toggle('is-open', bOpen); oBackdrop.hidden = !bOpen; hNavButton.setAttribute('aria-expanded', String(bOpen)); if (bOpen)
     fnValue('hc-familytree-close-nav').focus();
 else
-    hNavButton.focus(); }
+    (oRoot.classList.contains('hc-familytree-touch-layout')?fnValue('hc-familytree-mobile-trees'):hNavButton).focus(); }
 hNavButton.onclick=/** @h05-inline
  * @brief Zpracuje událost přiřazenou příslušnému ovládacímu prvku.
  * @returns {unknown} Výsledná hodnota nebo dokončení callbacku.
@@ -2659,7 +2659,7 @@ async function loadTrees() { aTrees = await fnApi('/api/trees'); fnValue('hc-fam
  */
 oT => 
     fnHtml `<section class="hc-familytree-tree-item ${+oT.id === nCurrent ? 'active' : ''}" data-tree-wrap="${oT.id}"><button type="button" data-tree="${oT.id}" class="hc-familytree-tree-main ${
-    +oT.id === nCurrent ? 'active' : ''}" title="${fnTr("Double-click to open the research journal")}"><span>🌳</span><span><strong>${fnEsc(oT.name)}</strong><small>${describeTreeItem(oT)
+    +oT.id === nCurrent ? 'active' : ''}" title="${fnEsc(oT.name)}" aria-label="${fnEsc(oT.name)}"><span>🌳</span><span><strong>${fnEsc(oT.name)}</strong><small>${describeTreeItem(oT)
     }</small></span></button><button type="button" class="hc-familytree-tree-more" data-tree-menu-toggle="${oT.id}" aria-label="${fnTr("Family tree tools")}: ${fnEsc(oT.name)
     }" aria-haspopup="menu" aria-expanded="false" title="${fnTr("Family tree tools")}: ${fnEsc(oT.name)}">⋯</button>\
 </section>`).join(''); fnValue('hc-familytree-empty').hidden = aTrees.length > 0; if (!nCurrent && aTrees[0])
@@ -4432,7 +4432,7 @@ function syncLegendDragSetting(){hLegend.classList.toggle('drag-disabled',!bAllo
  * @brief Zjistí, zda touch rodokmen v uživatelském rozhraní FamilyTree.
  * @returns {unknown} Hodnota použitá volající částí rozhraní.
  */
-function isTouchTree(){return window.matchMedia('(max-width:760px)').matches}
+function isTouchTree(){return window.matchMedia('(max-width:760px), (pointer: coarse) and (max-width:1180px)').matches}
 // CZ: Posun a přiblížení se týkají pouze vnitřní vrstvy. Viewport se nikdy neškáluje.
 //*****************************************************************************
 /**
@@ -7718,6 +7718,279 @@ oE35=>{if(oE35.target.matches('[data-close]'))closeModal();
 oE36=>{if(oE36.key==='Escape'&&!fnValue('hc-familytree-tree-menu').hidden){oE36.preventDefault();
     closeTreeActionMenu(true)}else if(oE36.key==='Escape'&&!fnValue('hc-familytree-sidebar-menu').hidden){oE36.preventDefault();fnValue('hc-familytree-sidebar-menu').hidden=true;fnValue('hc-familytree-sidebar-more')?.focus()}});
 oToolbarController=oCore.toolbar.create(fnValue("hc-familytree-core-toolbar"),{ariaLabel:fnTr("Family tree tools"),actions:fnToolbarActions()});
+// CZ: Výhradně dotykové rozložení. Desktopové lišty ani jejich obsluha se nemění.
+// Vysouvací ouška jsou viditelná na telefonu na výšku i na šířku.
+const oMobileMedia=window.matchMedia('(pointer: coarse) and (max-width: 1180px)');
+const hMobileTabs=document.createElement('div');
+hMobileTabs.id='hc-familytree-mobile-shell';
+hMobileTabs.innerHTML=`<button type="button" id="hc-familytree-mobile-trees" aria-label="${fnEsc(fnTr('Open menu'))}" aria-controls="hc-familytree-sidebar" aria-expanded="false" title="${fnEsc(fnTr('Open menu'))}">❯</button>
+<button type="button" id="hc-familytree-mobile-tools" aria-label="${fnEsc(fnTr('Family tree tools'))}" aria-controls="hc-familytree-mobile-tool-panel" aria-expanded="false" title="${fnEsc(fnTr('Family tree tools'))}">⋯</button>
+<section id="hc-familytree-mobile-tool-panel" aria-label="${fnEsc(fnTr('Family tree tools'))}" hidden>
+<div class="hc-familytree-mobile-tool-header"><strong>${fnEsc(fnTr('Family tree tools'))}</strong><button type="button" id="hc-familytree-mobile-tools-close" aria-label="${fnEsc(fnTr('Close'))}">×</button></div>
+<div id="hc-familytree-mobile-tool-contents"></div></section>`;
+oRoot.append(hMobileTabs);
+const hMobileTreeTab=fnValue('hc-familytree-mobile-trees');
+const hMobileToolsTab=fnValue('hc-familytree-mobile-tools');
+const hMobileToolPanel=fnValue('hc-familytree-mobile-tool-panel');
+const hMobileToolContents=fnValue('hc-familytree-mobile-tool-contents');
+const hSidebarResize=document.createElement('div');
+hSidebarResize.id='hc-familytree-mobile-sidebar-resize';
+hSidebarResize.setAttribute('role','separator');
+hSidebarResize.setAttribute('aria-orientation','vertical');
+hSidebarResize.setAttribute('aria-label',fnTr('Family tree tools'));
+hSidebarResize.setAttribute('tabindex','0');
+oSidebar.append(hSidebarResize);
+let nMobileSidebarWidth=286;
+try { const nSavedWidth=Number(localStorage.getItem('hc_familytree:mobile-sidebar-width'));if(Number.isFinite(nSavedWidth)&&nSavedWidth>=220)nMobileSidebarWidth=nSavedWidth; } catch(oIgnore){}
+/**
+ * @brief Nastaví šířku mobilního výsuvného seznamu rodokmenů v bezpečných mezích.
+ * @param {number} nRequestedWidth Požadovaná šířka panelu v CSS pixelech.
+ * @returns {void} Nastavená šířka se ukládá do CSS proměnné.
+ */
+function setMobileSidebarWidth(nRequestedWidth){
+ const nLimit=Math.max(220,Math.min(440,window.innerWidth-44));
+ nMobileSidebarWidth=Math.min(nLimit,Math.max(220,Math.round(nRequestedWidth)));
+ oRoot.style.setProperty('--hc-familytree-mobile-sidebar-width',nMobileSidebarWidth+'px');
+}
+setMobileSidebarWidth(nMobileSidebarWidth);
+let oMobileResizeGesture=null;
+hSidebarResize.addEventListener('pointerdown',/** @h05-inline
+ * @brief Zahájí změnu šířky mobilního panelu dotykem.
+ * @param {PointerEvent} oEvent Událost zahájení změny šířky.
+ * @returns {void} Událost nemá návratovou hodnotu.
+ */
+oEvent=>{
+ if(!oMobileMedia.matches)return;
+ oEvent.stopPropagation();oEvent.preventDefault();
+ oMobileResizeGesture={id:oEvent.pointerId,x:oEvent.clientX,width:nMobileSidebarWidth};
+ hSidebarResize.setPointerCapture?.(oEvent.pointerId);
+});
+hSidebarResize.addEventListener('pointermove',/** @h05-inline
+ * @brief Upravuje šířku vysunutého postranního panelu při tažení.
+ * @param {PointerEvent} oEvent Souřadnice tažení na dotykovém zařízení.
+ * @returns {void} Událost nemá návratovou hodnotu.
+ */
+oEvent=>{
+ if(!oMobileResizeGesture||oMobileResizeGesture.id!==oEvent.pointerId)return;
+ setMobileSidebarWidth(oMobileResizeGesture.width+oEvent.clientX-oMobileResizeGesture.x);
+});
+/**
+ * @brief Ukončí změnu šířky vysunutého panelu a zapamatuje její poslední hodnotu.
+ * @param {PointerEvent} oEvent Událost ukončení tažení.
+ * @returns {void} Bez návratové hodnoty.
+ */
+function endMobileSidebarResize(oEvent){
+ if(!oMobileResizeGesture||oMobileResizeGesture.id!==oEvent.pointerId)return;
+ oMobileResizeGesture=null;
+ try{localStorage.setItem('hc_familytree:mobile-sidebar-width',String(nMobileSidebarWidth))}catch(oIgnore){}
+}
+hSidebarResize.addEventListener('pointerup',endMobileSidebarResize);
+hSidebarResize.addEventListener('pointercancel',endMobileSidebarResize);
+hSidebarResize.addEventListener('keydown',/** @h05-inline
+ * @brief Umožní změnu šířky panelu také z klávesnice.
+ * @param {KeyboardEvent} oEvent Stisknutá směrová klávesa.
+ * @returns {void} Událost nemá návratovou hodnotu.
+ */
+oEvent=>{
+ if(!oMobileMedia.matches||!['ArrowLeft','ArrowRight'].includes(oEvent.key))return;
+ oEvent.preventDefault();setMobileSidebarWidth(nMobileSidebarWidth+(oEvent.key==='ArrowRight'?16:-16));
+ try{localStorage.setItem('hc_familytree:mobile-sidebar-width',String(nMobileSidebarWidth))}catch(oIgnore){}
+});
+/**
+ * @brief Zavře mobilní sadu nástrojů a vrátí pozornost k dostupnému oušku.
+ * @returns {void} Nevytváří žádné nové operace ani oprávnění.
+ */
+function closeMobileToolPanel(){
+ hMobileToolPanel.hidden=true;
+ hMobileToolsTab.setAttribute('aria-expanded','false');
+}
+/**
+ * @brief Naplní mobilní nabídku existujícími akcemi aplikace podle oprávnění ke stromu.
+ * @returns {void} Všechny akce sdílejí původní obslužné funkce desktopové aplikace.
+ */
+function populateMobileTools(){
+ hMobileToolContents.replaceChildren();
+ const hSearch=document.createElement('input');hSearch.type='search';
+ hSearch.placeholder=fnTr('Search for a person');
+ hSearch.setAttribute('aria-label',fnTr('Search for a person'));
+ hSearch.value=fnValue('hc-familytree-search').value;
+ hSearch.addEventListener('input',/** @h05-inline
+ * @brief Synchronizuje mobilní vyhledávání s původním filtrem osob.
+ * @returns {void} Událost nemá návratovou hodnotu.
+ */
+()=>{
+   const hOriginal=fnValue('hc-familytree-search');hOriginal.value=hSearch.value;
+   hOriginal.dispatchEvent(new Event('input',{bubbles:true}));
+ });
+ hMobileToolContents.append(hSearch);
+ const aActions=fnToolbarActions().filter(/** @h05-inline
+ * @brief Vybere pouze nástroje dostupné podle oprávnění uživatele.
+ * @param {object} oAction Definice původního nástroje.
+ * @returns {boolean} Výsledek požadované operace.
+ */
+oAction=>!oAction.hidden);
+ /** @param {string} sTitle Titulek skupiny. @returns {HTMLElement} Vytvořená sekce. */
+ function group(sTitle){const hGroup=document.createElement('section');hGroup.className='hc-familytree-mobile-tool-group';
+   const hTitle=document.createElement('h3');hTitle.textContent=sTitle;hGroup.append(hTitle);hMobileToolContents.append(hGroup);return hGroup;}
+ /** @param {HTMLElement} hGroup Kontejner. @param {string} sLabel Text. @param {Function} fnAction Oprávněná akce. @returns {void} Vytvoří tlačítko. */
+ function action(hGroup,sLabel,fnAction){const hButton=document.createElement('button');hButton.type='button';hButton.textContent=sLabel;
+   hButton.addEventListener('click',/** @h05-inline
+ * @brief Spustí původní akci po zavření mobilní nabídky.
+ * @returns {void} Událost nemá návratovou hodnotu.
+ */
+()=>{closeMobileToolPanel();void fnAction()});hGroup.append(hButton);}
+ const hView=group(fnTr('Family tree tools'));
+ for(const oAction of aActions)action(hView,(oAction.icon||'')+' '+oAction.label,oAction.onClick);
+ if(oState){
+  const hTree=group(currentTreeName());
+  const oCurrentTree=aTrees.find(/** @h05-inline
+ * @brief Vyhledá aktivní rodokmen v seznamu oprávněných stromů.
+ * @param {object} oTree Položka stromu.
+ * @returns {boolean} Výsledek požadované operace.
+ */
+oTree=>+oTree.id===+nCurrent)||{canEdit:!!oState.canEdit,isOwner:false};
+  const hActions=document.createElement('div');hActions.innerHTML=treeActionMenu(oCurrentTree);
+  for(const hSource of hActions.querySelectorAll('[data-tree-tool]')){
+   const sOperation=hSource.dataset.treeTool;
+   action(hTree,hSource.textContent,/** @h05-inline
+ * @brief Otevře původní akci aktuálního rodokmenu podle oprávnění.
+ * @returns {Promise<unknown>} Výsledek požadované operace.
+ */
+()=>runTreeAction(nCurrent,sOperation));
+  }
+ }
+ const hGlobal=group(fnTr('Application menu'));
+ action(hGlobal,fnTr('Settings'),/** @h05-inline
+ * @brief Otevře nastavení FamilyTree.
+ * @returns {void} Událost nemá návratovou hodnotu.
+ */
+()=>openSettingsDialog());
+ action(hGlobal,fnTr('Statistics for all my trees'),/** @h05-inline
+ * @brief Otevře přehled statistik dostupných rodokmenů.
+ * @returns {void} Událost nemá návratovou hodnotu.
+ */
+()=>openOwnedStatistics());
+ action(hGlobal,fnTr('Import family tree / backup'),/** @h05-inline
+ * @brief Otevře běžný import rodokmenu.
+ * @returns {void} Událost nemá návratovou hodnotu.
+ */
+()=>showImportChoice());
+ action(hGlobal,fnTr('Export all my family trees'),/** @h05-inline
+ * @brief Otevře export dostupných rodokmenů.
+ * @returns {void} Událost nemá návratovou hodnotu.
+ */
+()=>showExportChoice('all'));
+ if(aTrees.some(/** @h05-inline
+ * @brief Kontroluje vlastnictví alespoň jednoho rodokmenu.
+ * @param {object} oTree Položka rodokmenu.
+ * @returns {boolean} Výsledek požadované operace.
+ */
+oTree=>oTree.isOwner))action(hGlobal,fnTr('Delete all my family trees'),/** @h05-inline
+ * @brief Otevře potvrzení nevratného smazání vlastních stromů.
+ * @returns {void} Událost nemá návratovou hodnotu.
+ */
+()=>deleteAllTrees());
+}
+hMobileTreeTab.addEventListener('click',/** @h05-inline
+ * @brief Přepne výsuvný seznam rodokmenů levým ouškem.
+ * @returns {void} Událost nemá návratovou hodnotu.
+ */
+()=>{
+ closeMobileToolPanel();setNavOpen(!oSidebar.classList.contains('is-open'));
+});
+hMobileToolsTab.addEventListener('click',/** @h05-inline
+ * @brief Přepne kompletní sadu mobilních nástrojů pravým ouškem.
+ * @returns {void} Událost nemá návratovou hodnotu.
+ */
+()=>{
+ if(!hMobileToolPanel.hidden){closeMobileToolPanel();return}
+ if(oSidebar.classList.contains('is-open'))setNavOpen(false);
+ populateMobileTools();hMobileToolPanel.hidden=false;
+ hMobileToolsTab.setAttribute('aria-expanded','true');
+});
+fnValue('hc-familytree-mobile-tools-close').addEventListener('click',closeMobileToolPanel);
+document.addEventListener('pointerdown',/** @h05-inline
+ * @brief Zavře nástroje při klepnutí mimo nabídku.
+ * @param {PointerEvent} oEvent Prvek, na který se kleplo.
+ * @returns {void} Událost nemá návratovou hodnotu.
+ */
+oEvent=>{
+ if(hMobileToolPanel.hidden||hMobileToolPanel.contains(oEvent.target)||hMobileToolsTab.contains(oEvent.target))return;
+ closeMobileToolPanel();
+});
+document.addEventListener('keydown',/** @h05-inline
+ * @brief Obslouží zavření mobilních nástrojů klávesou Escape.
+ * @param {KeyboardEvent} oEvent Klávesová událost.
+ * @returns {void} Událost nemá návratovou hodnotu.
+ */
+oEvent=>{
+ if(oEvent.key==='Escape'&&!hMobileToolPanel.hidden){oEvent.preventDefault();closeMobileToolPanel();hMobileToolsTab.focus();}
+});
+/**
+ * @brief Reaguje na otočení telefonu a zobrazuje ouška jen při dotykovém rozložení.
+ * @returns {void} Desktopové prvky zůstávají nedotčené.
+ */
+function syncMobileLayout(){
+ const bMobile=oMobileMedia.matches;
+ oRoot.classList.toggle('hc-familytree-touch-layout',bMobile);
+ if(!bMobile){closeMobileToolPanel();if(oSidebar.classList.contains('is-open'))setNavOpen(false)}
+ else setMobileSidebarWidth(nMobileSidebarWidth);
+ hMobileTreeTab.setAttribute('aria-expanded',String(bMobile&&oSidebar.classList.contains('is-open')));
+}
+oMobileMedia.addEventListener?.('change',syncMobileLayout);
+const oMobileSidebarObserver=new MutationObserver(/** @h05-inline
+ * @brief Synchronizuje stav ouška s vysunutím seznamu rodokmenů.
+ * @returns {void} Událost nemá návratovou hodnotu.
+ */
+()=>{
+ hMobileTreeTab.setAttribute('aria-expanded',String(oSidebar.classList.contains('is-open')));
+});
+oMobileSidebarObserver.observe(oSidebar,{attributes:true,attributeFilter:['class']});
+syncMobileLayout();
+// CZ: Klepnutí na kartu otevře informace také na iOS/Android i při čtecích právech.
+// Nativní click se po výslovném dotykovém otevření potlačí, aby dialog nevznikl dvakrát.
+let oMobileCardTap=null;
+oTreeView.addEventListener('pointerdown',/** @h05-inline
+ * @brief Připraví rozlišení mobilního klepnutí na osobu a posunu plátna.
+ * @param {PointerEvent} oEvent První bod dotyku.
+ * @returns {void} Událost nemá návratovou hodnotu.
+ */
+oEvent=>{
+ if(!oMobileMedia.matches||oEvent.pointerType!=='touch')return;
+ if(oEvent.isPrimary===false){if(oMobileCardTap)oMobileCardTap.multi=true;return;}
+ const hCard=oEvent.target.closest?.('[data-person]');
+ oMobileCardTap=hCard?{id:oEvent.pointerId,person:Number(hCard.dataset.person),x:oEvent.clientX,y:oEvent.clientY}:null;
+ // Zachytit následující pohyby bez ohledu na to, zda gesto začalo nad kartou.
+ if(!bAllowTouchCardDrag)try{oTreeView.setPointerCapture(oEvent.pointerId)}catch(oIgnore){}
+},{capture:true});
+oTreeView.addEventListener('pointerup',/** @h05-inline
+ * @brief Otevře kartu osoby při krátkém klepnutí; tažení je ignorováno.
+ * @param {PointerEvent} oEvent Koncový bod dotyku.
+ * @returns {void} Událost nemá návratovou hodnotu.
+ */
+oEvent=>{
+ const oTap=oMobileCardTap;
+ if(!oTap||oTap.id!==oEvent.pointerId||!oMobileMedia.matches)return;
+ oMobileCardTap=null;
+ if(Math.hypot(oEvent.clientX-oTap.x,oEvent.clientY-oTap.y)>10||oTap.multi||oTouches.size>1)return;
+ if(!byId(oTap.person))return;
+ // Desktop i práva zápisu nejsou dotčené; detail je vždy přístupný čtenáři.
+ bSuppressCardClick=true;
+ if(bSelectionMode){
+   if(oSelectedIds.has(oTap.person))oSelectedIds.delete(oTap.person);else oSelectedIds.add(oTap.person);
+   updateSelectionUI();
+ }else personDetail(oTap.person);
+ setTimeout(/** @h05-inline
+ * @brief Po otevření detailu povolí následující samostatné kliknutí.
+ * @returns {void} Událost nemá návratovou hodnotu.
+ */
+()=>{bSuppressCardClick=false},380);
+},{capture:true});
+oTreeView.addEventListener('pointercancel',/** @h05-inline
+ * @brief Zapomene zrušený dotyk a zabrání nechtěnému otevření osoby.
+ * @returns {void} Událost nemá návratovou hodnotu.
+ */
+()=>{oMobileCardTap=null},{capture:true});
 let oPreviousTouchMode=isTouchTree();
 const oLayoutController=oCore.layout.observe(oRoot,{topOffset:50,onResize:/** @h05-inline
  * @brief Provede vloženou callback operaci ve zpracovávaném rodokmenu.

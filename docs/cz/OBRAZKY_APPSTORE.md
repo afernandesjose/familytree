@@ -1,4 +1,4 @@
-# Obrázky pro Nextcloud App Store – FamilyTree 1.1.6
+# Obrázky pro Nextcloud App Store – FamilyTree 1.1.7
 
 **Ikona pro aplikaci:** `src/img/app.svg` (ve vydaném TAR.GZ jako `img/app.svg`). Zůstává bitově nezměněná a je jediným distribuovaným grafickým souborem aplikace.
 

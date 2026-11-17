@@ -756,3 +756,107 @@
 #hc_familytree .hc-familytree-canvas-wrap { inset:0; width:100%; height:100%; overflow:hidden; }
 #hc_familytree .hc-familytree-pan { transform-origin:0 0; }
 #hc_familytree .hc-familytree-canvas { zoom:1; transform:none; }
+
+/* ============================================================================
+ * Mobilní FamilyTree 1.1.7: na výšku i na šířku; PC rozložení zůstává beze změny.
+ * Dvě drobná vysouvací ouška dávají přístup ke všem původním nástrojům.
+ * ============================================================================ */
+#hc_familytree #hc-familytree-mobile-shell { display:none; }
+#hc_familytree #hc-familytree-mobile-sidebar-resize {display:none;}
+@media (pointer: coarse) and (max-width: 1180px) {
+ #hc_familytree.hc-familytree-touch-layout {position:relative;--hc-familytree-mobile-sidebar-width:286px;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-shell {
+   display:block!important; position:relative!important; min-height:0!important; flex:1 1 0!important;
+   height:100%!important; overflow:hidden!important;
+ }
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-main {
+   display:grid!important; grid-template-rows:minmax(0,1fr)!important;
+   width:100%!important; height:100%!important; min-height:0!important;
+ }
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-toolbar {display:none!important;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-stage {height:100%!important;min-height:0!important;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-canvas-wrap {
+   overflow:hidden!important;touch-action:none!important;overscroll-behavior:contain!important;
+ }
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-canvas-wrap .hc-familytree-person {touch-action:none!important;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-sidebar {
+   display:flex!important;position:absolute!important;left:0!important;top:0!important;bottom:0!important;
+   z-index:2502!important; flex-direction:column!important;
+   width:min(var(--hc-familytree-mobile-sidebar-width),calc(100% - 42px))!important;
+   max-width:none!important; padding:12px 12px 12px 10px!important;
+   overflow:hidden!important;border-right:1px solid var(--color-border)!important;border-bottom:0!important;
+   transform:translateX(-105%);transition:transform .18s ease;
+ }
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-sidebar.is-open {transform:translateX(0)!important;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-brand {display:flex!important;grid-column:auto!important;min-width:0;gap:7px;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-brand-copy {min-width:0; flex:1 1 auto;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-brand h2 {white-space:nowrap;text-overflow:ellipsis;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-logo {font-size:24px;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-sidebar > .primary {width:100%!important;grid-column:auto!important;flex:0 0 auto;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-sidebar > .primary .hc-familytree-button-label {display:inline!important;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-tree-list {
+   display:flex!important;flex-direction:column!important;grid-column:auto!important;grid-row:auto!important;
+   flex:1 1 0!important;max-height:none!important;overflow-x:hidden!important;overflow-y:auto!important;
+   min-width:0!important;overscroll-behavior:contain;
+ }
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-tree-item {min-width:0!important; width:100%!important; display:grid!important;grid-template-columns:minmax(0,1fr) 38px;align-items:center;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-tree-main {min-width:0!important;width:100%!important;overflow:hidden;padding:7px 5px!important;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-tree-main > span:last-child {min-width:0;flex:1;overflow:hidden;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-tree-main strong {max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-tree-main:focus-visible strong {
+    overflow-x:auto;text-overflow:clip;scrollbar-width:thin;
+ }
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-tree-more {width:38px!important;min-width:38px!important;padding:0!important;}
+ #hc_familytree.hc-familytree-touch-layout #hc-familytree-open-nav {display:none!important;}
+ #hc_familytree.hc-familytree-touch-layout #hc-familytree-close-nav {display:inline-flex!important;min-width:40px!important;min-height:40px!important;}
+ #hc_familytree.hc-familytree-touch-layout #hc-familytree-nav-backdrop:not([hidden]) {
+   display:block!important;position:absolute!important;z-index:2501!important;inset:0!important;width:100%!important;background:#0008!important;
+ }
+ #hc_familytree.hc-familytree-touch-layout #hc-familytree-mobile-sidebar-resize {
+   display:block;position:absolute;right:0;top:15%;height:70%;width:11px;cursor:ew-resize;
+   touch-action:none;border-right:3px solid var(--color-border);border-radius:4px;
+ }
+ #hc_familytree.hc-familytree-touch-layout #hc-familytree-mobile-shell {display:contents;}
+ #hc_familytree.hc-familytree-touch-layout #hc-familytree-mobile-trees,
+ #hc_familytree.hc-familytree-touch-layout #hc-familytree-mobile-tools {
+   display:flex;position:absolute;top:10px;z-index:2503;align-items:center;justify-content:center;
+   width:27px;min-width:27px;height:46px;min-height:46px;padding:0;border:1px solid var(--color-border);
+   color:var(--color-main-text);background:var(--color-main-background);box-shadow:0 2px 8px #0003;
+   font-size:18px;line-height:1;cursor:pointer;
+ }
+ #hc_familytree.hc-familytree-touch-layout #hc-familytree-mobile-trees {left:0;border-radius:0 12px 12px 0;}
+ #hc_familytree.hc-familytree-touch-layout #hc-familytree-mobile-tools {right:0;border-radius:12px 0 0 12px;}
+ #hc_familytree.hc-familytree-touch-layout #hc-familytree-mobile-tool-panel {
+   position:absolute;top:5px;right:8px;bottom:auto;z-index:2510;
+   display:flex;flex-direction:column;gap:7px;
+   width:min(330px,calc(100% - 48px));max-height:calc(100% - 10px);overflow:auto;
+   border:1px solid var(--color-border);border-radius:12px;padding:12px;
+   color:var(--color-main-text);background:var(--color-main-background);box-shadow:0 8px 24px #0006;
+ }
+ #hc_familytree.hc-familytree-touch-layout #hc-familytree-mobile-tool-panel[hidden] {display:none!important;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-mobile-tool-header {display:flex;justify-content:space-between;align-items:center;gap:8px;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-mobile-tool-header button {min-width:38px;min-height:38px;}
+ #hc_familytree.hc-familytree-touch-layout #hc-familytree-mobile-tool-contents {display:grid;gap:10px;min-width:0;}
+ #hc_familytree.hc-familytree-touch-layout #hc-familytree-mobile-tool-contents input[type=search] {width:100%;min-width:0;min-height:40px;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-mobile-tool-group {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-mobile-tool-group h3 {grid-column:1/-1;font-size:13px;margin:4px 0;color:var(--color-text-maxcontrast);overflow-wrap:anywhere;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-mobile-tool-group button {
+   width:100%;min-width:0;min-height:40px;padding:7px 8px;text-align:left;white-space:normal;overflow-wrap:anywhere;
+   border:1px solid var(--color-border);border-radius:7px;color:var(--color-main-text);background:var(--color-background-dark);
+ }
+ #hc_familytree.hc-familytree-touch-layout #hc-familytree-view-toggle,
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-view-controls {display:none!important;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-legend:not([open]):not(.is-moved) {
+   min-height:0;max-height:28px;padding:2px 5px;right:5px;bottom:5px;opacity:.83;font-size:10px;
+ }
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-legend:not([open]):not(.is-moved) summary {padding:0 4px;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-legend:not([open]):not(.is-moved) #hc-familytree-legend-handle {display:none!important;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-selection-status:not([hidden]) {font-size:11px;max-width:calc(100% - 40px);}
+}
+/* Výška telefonu na šířku: stále pouze 2 ouška, žádný druhý řádek. */
+@media (pointer:coarse) and (max-width:1180px) and (max-height:460px){
+ #hc_familytree.hc-familytree-touch-layout #hc-familytree-mobile-trees,
+ #hc_familytree.hc-familytree-touch-layout #hc-familytree-mobile-tools {top:4px;height:40px;min-height:40px;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-legend:not([open]):not(.is-moved) {bottom:2px;}
+ #hc_familytree.hc-familytree-touch-layout .hc-familytree-mobile-tool-group {grid-template-columns:repeat(3,minmax(0,1fr));}
+}

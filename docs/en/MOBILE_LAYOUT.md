@@ -1,11 +1,5 @@
-[🇨🇿 Česky](../cz/MOBILNI_LAYOUT.md) | [🇬🇧 **English**](MOBILE_LAYOUT.md)
+# FamilyTree – mobile layout 1.1.7
 
-# Family Tree: mobile layout
+Desktop layout and mouse interactions are unchanged. On touch devices in portrait and landscape, the family tree gets the available screen height. A slim left **❯** tab opens the tree drawer; a slim right **⋯** tab opens a consolidated, permission-aware tools panel, including search, zoom, tree actions, research journal and settings. Panels close after choosing a tree or tapping elsewhere. The tree drawer can be resized from its right edge and remembers its width. Long names are truncated without stretching the sidebar, with their full value available as a title. One-finger pan and two-finger pinch work over people cards as well as the canvas. A quick tap opens a person's details for viewers too. Research records and the journal remain accessible with read-only permission, while editing tools remain hidden.
 
-Version: 1.1.0-dev7. The app uses the Shared App Core Layout API on Nextcloud 35.
-
-On a phone, the menu button opens the tree list over the canvas. Selecting a tree, using the close button, tapping outside, or pressing Escape closes it. The tree opens at a readable scale around the root person. One finger pans and two fingers zoom. The ☷ icon in the canvas opens view controls for Entire tree, 100%, Arrange tree and group selection. Zooming does not change the viewport height. The legend stays at the bottom right until dragged by its ⠿ handle; the browser remembers its location. Core owns app height and layout. Forms become one column when narrow.
-
-## Check on a phone
-
-Open a large tree and check that its root person is readable. Zoom out to show the entire tree and check that no strip appears below the viewport. Pinch, pan to both edges and back, move the legend, then open a person card and a long form.
+Test portrait/landscape, short taps versus drags, read-only shares, long titles and a desktop regression before production rollout.

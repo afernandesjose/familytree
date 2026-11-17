@@ -1,4 +1,15 @@
+## 1.1.7 – 2026-11-11
+
+- Fix GitHub issue #1: the research import preview now maps H05-prefixed PHP variables to the correct stable response keys instead of using invalid `compact()` names; executable regression test added.
+- App Store metadata now expose only the Homepage resource (redundant documentation links removed); the README headers retain only the Czech/English language switch.
+
+- Ship mobile usability updates prepared in the previous source: collapsible tree/tools drawers, touch panning and pinch, person taps, read-only journal access, and compact portrait/landscape layouts. Desktop behavior is unchanged.
+- Bump release version after public 1.1.6 and keep versioned JS/CSS, metadata, PHP references, documentation and tests consistent.
+- No changes to the approved SVG icon, external screenshot URLs, database schema or findings merge logic.
+
 ## 1.1.6 – 2026-11-11
+
+- Mobile portrait and landscape: two slim edge tabs for a resizable tree drawer and the complete permission-aware tools menu, reliable one-finger panning, pinch zoom and person-detail taps, plus long-name handling. Read-only users retain research journal access. Desktop behavior is unchanged.
 
 - App Store screenshots are now separately hosted in the public repository root `screenshot/` folder and excluded from installation and source ZIP archives. Their original bytes remain unchanged.
 - The installed app still contains the original approved `img/app.svg`; release checks validate archive contents and exact public URL/approved-hash mapping.
