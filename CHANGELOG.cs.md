@@ -1,3 +1,8 @@
+## 1.2.0 – 2026-11-17
+- Obě README: odstraněn původní vložený obrázek a doplněny tři běžné odkazy na schválené snímky ve složce `screenshot/` na GitHubu.
+- Metadata Nextcloud App Storu zachovávají všechny tři URL; verze a cache názvy JS/CSS sjednoceny na 1.2.0.
+- Bez přidání PNG do archivů, změny schválené ikony, datových migrací či funkčních úprav.
+
 ## 1.1.10 (2026-11-17)
 - Opraveno mizení portrétů po překreslení rodokmenu. Při chybějícím/zastaralém odkazu se použije fotografie evidovaná v galerii.
 - Ochrana při současné editaci osoby, aby starší formulář nesmazal odkaz na hlavní místní portrét.

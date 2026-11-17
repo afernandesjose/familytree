@@ -1,3 +1,8 @@
+## 1.2.0 (2026-11-17)
+- Updated both README files with three plain hyperlinks to original `screenshot/01.png`, `02.png`, `03.png` on GitHub; removed the former embedded screenshot.
+- Nextcloud App Store XML continues to reference exactly these three external screenshots; app metadata and version now indicate 1.2.0.
+- Preserved the original approved app icon, all genealogy features, photo storage, and backup behavior; no screenshots are packaged.
+
 ## 1.1.10 (2026-11-17)
 - Oprava portrétů ve stromu: bezpečné načtení hlavní fotografie z galerie nebo první dostupné fotografie, i při starém či prázdném odkazu photo_url.
 - Uložení osoby již nepřepíše lokálně spravovaný portrét z dříve otevřeného formuláře.

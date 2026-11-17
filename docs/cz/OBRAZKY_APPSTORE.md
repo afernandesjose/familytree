@@ -8,7 +8,7 @@
 - https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/02.png
 - https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/03.png
 
-První obrázek slouží i jako `small-thumbnail` karty obchodu. Žádné PNG se **nepřidává** do Publisher vstupního ZIPu, GitHub full-source ZIPu ani runtime TAR.GZ; Publisher je negeneruje ani nepřekóduje. V obou README je odkaz na `screenshot/01.png` – na GitHubu funguje po ručním nahrání screenshotů, v samostatném staženém zdrojovém ZIPu nebude obrázek uložen.
+První obrázek slouží i jako `small-thumbnail` karty obchodu. Žádné PNG se **nepřidává** do Publisher vstupního ZIPu, GitHub full-source ZIPu ani runtime TAR.GZ; Publisher je negeneruje ani nepřekóduje. Obě README obsahují tři obyčejné HTTPS odkazy na `screenshot/01.png`, `02.png`, `03.png`, nikoli vložené náhledy. Obrázky zůstávají výhradně na GitHubu a nejsou v ZIPu.
 
 ## Povinný postup vydání
 

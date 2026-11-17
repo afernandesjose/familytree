@@ -1,3 +1,8 @@
+## 1.2.0 – 2026-11-17
+- Replace the previous README image embed with three plain external links to original screenshots hosted in the `screenshot/` folder on GitHub.
+- Keep the same three App Store screenshot URLs in `info.xml`; update release version and JS/CSS cache keys to 1.2.0.
+- No bundled screenshot PNGs, icon changes, data migrations, or feature changes.
+
 ## 1.1.10 (2026-11-17)
 - Fixed portrait disappearing from tree cards after re-render: select the locally managed gallery photo even when photo_url is empty or outdated.
 - Prevent editing a person from overwriting the local portrait reference with stale form data.

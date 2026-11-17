@@ -1,12 +1,20 @@
-# FamilyTree 1.1.10 for Nextcloud
+# FamilyTree 1.2.0 for Nextcloud
 
 **Language:** English · [Česky](README_CZ.md)
 
 **FamilyTree** is a self-hosted genealogy application for **Nextcloud 35**. Create and share family trees, people, relationships and events; manage photos, sources, documents and research notes; import GEDCOM 7 / GEDZIP; and keep your records in your own Nextcloud.
 
-![FamilyTree — main family tree view](screenshot/01.png)
+## Screenshots
 
-App Store screenshots are hosted separately in the repository root `screenshot/` directory and are not distributed inside the signed Nextcloud app. The installed app keeps its approved `img/app.svg` icon.
+The original screenshots are hosted on GitHub. Only links are listed here; image files are not included or embedded in this documentation.
+
+- [Screenshot 01 – Family tree overview](https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/01.png)
+- [Screenshot 02 – Research journal](https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/02.png)
+- [Screenshot 03 – Registers and photographs](https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/03.png)
+
+App Store screenshots are hosted separately in the GitHub repository root `screenshot/` directory. They are linked externally and not distributed inside the signed Nextcloud app. The installed app keeps its approved `img/app.svg` icon.
+
+**Documentation updated in 1.2.0:** The README lists the three GitHub-hosted screenshots as links rather than embedding images. No PNG assets are added to the application.
 
 **New in 1.1.8:** Private per-person photo gallery with crop, rotation, primary portrait selection and original-image preservation. Images are stored in owner-controlled Nextcloud Files and included in native ZIP v2 backups. [Photo management guide](docs/en/PERSON_PHOTOS.md).
 
@@ -72,7 +80,7 @@ A native FamilyTree ZIP backup is distinct from GEDCOM exchange. Keep independen
 
 The **public GitHub source ZIP** contains `src/` (the complete runnable app), public `docs/`, license, changelogs and source deployment/build scripts. It intentionally excludes private keys, credentials, internal HDS/CP21 audit evidence, runtime logs and test reports.
 
-`sh build-release.sh` assembles an **unsigned runtime ZIP** (`release/hc_familytree-1.1.10.zip`) for Publisher CP21, an **unsigned staging TAR.GZ**, and exactly one clean **`release/hc_familytree-1.1.10-full-source.zip`** from this checkout; the build **does not sign or publish** a release. The release manager uses Hacesoft Publisher to run mandatory quality gates, sign the application with the registered Nextcloud certificate, and publish the final TAR.GZ and its archive signature to the App Store. The signed final artifact is not produced by this GitHub source ZIP alone.
+`sh build-release.sh` assembles an **unsigned runtime ZIP** (`release/hc_familytree-1.2.0.zip`) for Publisher CP21, an **unsigned staging TAR.GZ**, and exactly one clean **`release/hc_familytree-1.1.10-full-source.zip`** from this checkout; the build **does not sign or publish** a release. The release manager uses Hacesoft Publisher to run mandatory quality gates, sign the application with the registered Nextcloud certificate, and publish the final TAR.GZ and its archive signature to the App Store. The signed final artifact is not produced by this GitHub source ZIP alone.
 
 **License:** [AGPL-3.0-or-later](LICENSE). Report problems via [GitHub Issues](https://github.com/hacesoft/familytree/issues).
 
