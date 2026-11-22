@@ -1,0 +1,37 @@
+/* Dashboard FamilyTree 1.2.2. Používá schválenou aplikacní ikonu img/app.svg. */
+.icon-hc-familytree {
+    background-image: url('../img/app.svg') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+.hc-ft-dashboard-widget { padding: 12px 14px; box-sizing: border-box; }
+.hc-ft-widget-favorite {
+    display: flex; align-items: center; gap: 11px;
+    min-height: 57px; padding: 9px 11px; border-radius: 10px;
+    background: var(--color-primary-element-light, var(--color-background-hover));
+    color: var(--color-main-text); text-decoration: none;
+}
+.hc-ft-widget-favorite:hover, .hc-ft-widget-item:hover {
+    background: var(--color-background-hover); text-decoration: none;
+}
+.hc-ft-widget-icon { width: 38px; height: 38px; flex-shrink: 0; object-fit: contain; }
+.hc-ft-widget-favorite-text { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.hc-ft-widget-favorite-text > span { font-size: .82em; }
+.hc-ft-widget-favorite-text strong { overflow-wrap: anywhere; }
+.hc-ft-widget-stats { display: flex; gap: 32px; padding: 15px 3px 12px; }
+.hc-ft-widget-stats > span { display: flex; flex-direction: column; min-width: 0; }
+.hc-ft-widget-stats b { font-size: 24px; line-height: 1.2; }
+.hc-ft-widget-stats small { font-size: .84em; }
+.hc-ft-widget-section { margin: 0 0 14px; }
+.hc-ft-widget-section h3 { font-size: 14px; font-weight: 650; margin: 5px 0 6px; }
+.hc-ft-widget-section p { font-size: .84em; opacity: .8; padding: 6px 2px; }
+.hc-ft-widget-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 8px 5px; color: var(--color-main-text); text-decoration: none;
+    border-bottom: 1px solid var(--color-border); border-radius: 4px;
+}
+.hc-ft-widget-item-symbol { flex: 0 0 18px; }
+.hc-ft-widget-item-text { min-width: 0; display: flex; flex-direction: column; }
+.hc-ft-widget-item-text strong { font-weight: 500; overflow-wrap: anywhere; }
+.hc-ft-widget-item-text small { font-size: .78em; opacity: .85; overflow-wrap: anywhere; }

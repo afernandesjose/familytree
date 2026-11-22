@@ -1,49 +1,63 @@
 <?php
 declare(strict_types=1);
 /**
- * @file Kód aplikace FamilyTree pro Nextcloud.
- * Maďarská notace proměnných: s = string, n = int/float,
- * b = bool, a = array, o = objekt nebo hodnota mixed,
- * fn = funkce/callback, h = reference na element (převážně v JavaScriptu).
- * Prefixed identifiers are internal; wire-format keys, route names and public
- * Nextcloud API names are stable contractual identifiers.
+ * @file Registrace dashboardového widgetu FamilyTree pro Nextcloud 35.
+ * Maďarská notace: s = string, n = int, b = bool, a = array, o = objekt/mixed.
  */
 namespace OCA\HcFamilyTree\Dashboard;
-use OCA\HcFamilyTree\AppInfo\Application; use OCP\Dashboard\IWidget; use OCP\IURLGenerator; use OCP\IL10N; use OCP\Util;
-class FamilyTreeWidget implements IWidget {
- /**
- * @brief Inicializuje instanci a propojí předané závislosti.
- * @param IURLGenerator $oUrl Vstupní parametr „url“ pro operaci __construct.
- * @param IL10N $oL10n Překladová služba Nextcloudu.
- * @return void Konstruktor nevrací návratovou hodnotu.
- */
-public function __construct(private IURLGenerator $oUrl, private IL10N $oL10n){}
- /**
- * @brief Vrátí stabilní identifikátor dashboardového widgetu nebo aplikace.
- * @return string Výsledný text nebo přenosová reprezentace dat.
- */
- public function getId():string{return 'hc_familytree';} /**
- * @brief Vrátí zobrazovaný název dashboardového widgetu.
- * @return string Výsledný text nebo přenosová reprezentace dat.
- */
-public function getTitle():string{return $this->oL10n->t('FamilyTree');}
- /**
- * @brief Vrátí order používané v FamilyTreeWidget.
- * @return int Vypočtená číselná hodnota nebo identifikátor dle významu operace.
- */
- public function getOrder():int{return 20;} /**
- * @brief Vrátí CSS třídu ikony dashboardového widgetu.
- * @return string Výsledný text nebo přenosová reprezentace dat.
- */
-public function getIconClass():string{return 'icon-family';}
- /**
- * @brief Vrátí odkaz pro otevření aplikace FamilyTree.
- * @return ?string Textový výsledek, nebo null pokud není dostupný.
- */
- public function getUrl():?string{return $this->oUrl->linkToRoute('hc_familytree.page.index');}
- /**
- * @brief Načte family tree widget používané v FamilyTreeWidget.
- * @return void Bez návratové hodnoty; případné změny jsou popsány účelem metody.
- */
- public function load():void{Util::addScript(Application::APP_ID,'dashboard-1.2.0-20261117');}
+
+use OCA\HcFamilyTree\AppInfo\Application;
+use OCP\Dashboard\IIconWidget;
+use OCP\Dashboard\IWidget;
+use OCP\IL10N;
+use OCP\IURLGenerator;
+use OCP\Util;
+
+final class FamilyTreeWidget implements IWidget, IIconWidget {
+    /**
+     * @brief Získá služby pro generování interních odkazů a překladů.
+     * @param IURLGenerator $oUrl Generátor URL Nextcloudu.
+     * @param IL10N $oL10n Překladové katalogy aplikace.
+     * @return void
+     */
+    public function __construct(
+        private IURLGenerator $oUrl,
+        private IL10N $oL10n,
+    ) {}
+
+    /** @brief Vrátí registrovaný identifikátor widgetu. @return string */
+    public function getId(): string { return Application::APP_ID; }
+
+    /** @brief Vrátí lokalizovaný název widgetu. @return string */
+    public function getTitle(): string { return $this->oL10n->t('FamilyTree'); }
+
+    /** @brief Nastaví výchozí pozici widgetu v Dashboardu. @return int */
+    public function getOrder(): int { return 20; }
+
+    /** @brief Vrátí CSS třídu schválené ikony widgetu. @return string */
+    public function getIconClass(): string { return 'icon-hc-familytree'; }
+
+    /**
+     * @brief Poskytne přímo URL originální ikony také klientům Dashboard API.
+     * @return string Absolutní URL schválené ikony img/app.svg.
+     */
+    public function getIconUrl(): string {
+        return $this->oUrl->getAbsoluteURL(
+            $this->oUrl->imagePath(Application::APP_ID, 'app.svg')
+        );
+    }
+
+    /** @brief Vrátí odkaz na hlavní stránku aplikace. @return ?string */
+    public function getUrl(): ?string {
+        return $this->oUrl->linkToRoute('hc_familytree.page.index');
+    }
+
+    /**
+     * @brief Načte potřebné soubory widgetu, ale ne hlavní JavaScript aplikace.
+     * @return void
+     */
+    public function load(): void {
+        Util::addStyle(Application::APP_ID, 'dashboard-1.3.2-20261121');
+        Util::addScript(Application::APP_ID, 'dashboard-1.3.2-20261121');
+    }
 }

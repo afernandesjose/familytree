@@ -45,6 +45,7 @@ public function __construct(
         private IDBConnection $oDb,
         private IRequest $oRequest,
         private IRootFolder $oRootFolder,
+        private TreeMediaStorage $oTreeMedia,
     ) {}
 
     /**
@@ -646,11 +647,11 @@ fn(string $sStatus): bool => $sStatus !== 'challenged')) === 0 ? 'challenged' : 
                 $oOld = $aExisting['media'][$aM['media_id']] ?? null;
                 if ($oOld && $oOld['media_path'] !== '' && json_decode((string)$oOld['payload_json'], true) === $aM) {
                     try {
-                        $oSaved = $this->oRootFolder->getUserFolder($sOwnerUid)->get($oOld['media_path']);
-                        if ($oSaved instanceof File && hash_equals($aM['sha256'], hash('sha256', (string)$oSaved->getContent()))) {
+                        $sExisting = $this->oTreeMedia->read($nTreeId, $sOwnerUid, (string)$oOld['media_path']);
+                        if (hash_equals($aM['sha256'], hash('sha256', $sExisting))) {
                             $oMediaPaths[$aM['media_id']] = $oOld['media_path']; continue;
                         }
-                    } catch (NotFoundException) {}
+                    } catch (\Throwable) {}
                 }
                 $oBeforeFiles = count($aNewFiles);
                 $sPath = $this->saveMedia($sOwnerUid, $nTreeId, $aM, $sContent, $aNewFiles);
@@ -899,10 +900,9 @@ function (array $aRow): array {
  */
     public function displayMedia(array $aRow, string $sOwnerUid): Response {
         if ($aRow['entity_type'] !== 'media' || $aRow['media_path'] === '') return new JSONResponse(['error' => 'Image is missing.'], 404);
-        try { $oNode = $this->oRootFolder->getUserFolder($sOwnerUid)->get($aRow['media_path']); }
-        catch (NotFoundException) { return new JSONResponse(['error' => 'Image is missing.'], 404); }
-        if (!$oNode instanceof File || $oNode->getSize() > 16 * 1024 * 1024) return new JSONResponse(['error' => 'Image is missing.'], 404);
-        $sContent = (string)$oNode->getContent();
+        try { $sContent = $this->oTreeMedia->read((int)$aRow['tree_id'], $sOwnerUid, (string)$aRow['media_path']); }
+        catch (\Throwable) { return new JSONResponse(['error' => 'Image is missing.'], 404); }
+        if (strlen($sContent) > 16 * 1024 * 1024) return new JSONResponse(['error' => 'Image is missing.'], 404);
         $oMime = (new \finfo(FILEINFO_MIME_TYPE))->buffer($sContent);
         if (!in_array($oMime, self::IMAGES, true)) return new JSONResponse(['error' => 'Image is missing.'], 404);
         return new DataDisplayResponse($sContent, 200, ['Content-Type' => $oMime,

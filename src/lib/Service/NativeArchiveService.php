@@ -28,12 +28,13 @@ final class NativeArchiveService {
  * @param IRequest $oRequest Objekt HTTP požadavku.
  * @param IUserManager $oUsers Správce uživatelských účtů Nextcloudu.
  * @param IGroupManager $oGroups Správce uživatelských skupin Nextcloudu.
- * @param IAppManager $oAppManager Vstupní parametr „appManager“ pro operaci __construct.
+ * @param IAppManager $oAppManager Správa verze aplikace.
+ * @param PhotoBinaryStorage $oPhotoStorage Správné čtení a obnovení soukromých fotografií v AppData.
  * @return void Konstruktor nevrací návratovou hodnotu.
  */
 public function __construct(private IDBConnection $oDb, private IRootFolder $oRootFolder,
         private IRequest $oRequest, private IUserManager $oUsers, private IGroupManager $oGroups,
-        private IAppManager $oAppManager) {}
+        private IAppManager $oAppManager, private PhotoBinaryStorage $oPhotoStorage, private TreeMediaStorage $oTreeMedia) {}
 
     /**
  * @brief Načte požadované řádky z databáze a vrátí je aplikaci.
@@ -153,6 +154,10 @@ function (int $nTreeId, string $sPath) use (&$oStagedPaths): void {
         }
         foreach ($aTrees as $oTree) {
             $nTreeId = (int)$oTree['id'];
+            // CZ: uchovat i importní soubory z AppData předchozích vlastníků.
+            foreach ($this->oTreeMedia->cachedPaths($nTreeId) as $sStoredPath) {
+                $sAddPath($nTreeId, $sStoredPath);
+            }
             $oBase = 'Rodokmen/Import/' . $nTreeId;
             try { $oFolder = $oRoot->get($oBase); }
             catch (\OCP\Files\NotFoundException) { $oFolder = null; }
@@ -168,11 +173,14 @@ function (int $nTreeId, string $sPath) use (&$oStagedPaths): void {
         try {
             foreach ($oStagedPaths as $nTreeId => $aPaths) foreach ($aPaths as $sPath) {
                 if (count($aFiles) >= NativeArchiveFormat::MAX_FILES) self::fail('Too many attachments; backup was not created.');
-                try { $oNode = $oRoot->get($sPath); }
-                catch (\Throwable) { self::fail('Cannot read file for complete backup: ' . $sPath); }
-                if (!$oNode instanceof File || $oNode->getSize() > NativeArchiveFormat::MAX_FILE_BYTES)
-                    self::fail('File is missing or too large: ' . $sPath);
-                $oContents = (string)$oNode->getContent();
+                try {
+                    if (PhotoBinaryStorage::parts($sPath) !== null) {
+                        $oContents = $this->oPhotoStorage->read($sUid, $sPath);
+                    } else {
+                        // CZ: převzaté přílohy číst z bezpečného AppData, nikoli Files bývalého vlastníka.
+                        $oContents = $this->oTreeMedia->read((int)$nTreeId, $sUid, $sPath);
+                    }
+                } catch (\Throwable) { self::fail('Cannot read file for complete backup: ' . $sPath); }
                 $nSize = strlen($oContents); $oTotalBytes += $nSize;
                 if ($nSize > NativeArchiveFormat::MAX_FILE_BYTES) self::fail('File exceeds the 48 MiB limit: ' . $sPath);
                 if ($oTotalBytes > NativeArchiveFormat::MAX_TOTAL_BYTES) self::fail('Total attachments exceed the complete backup limit.');
@@ -187,7 +195,7 @@ function (int $nTreeId, string $sPath) use (&$oStagedPaths): void {
             $oManifest = ['format' => NativeArchiveFormat::ID, 'formatVersion' => NativeArchiveFormat::VERSION,
                 'appId' => 'hc_familytree', 'createdAt' => gmdate('c'), 'sourceVersion' => $this->oAppManager->getAppVersion('hc_familytree'),
                 'treeCount' => count($aTrees), 'dataSha256' => hash('sha256', $sJson), 'files' => $aFiles,
-                'info' => 'Complete FamilyTree records and owner-accessible local attachments; external URLs remain references.'];
+                'info' => 'Complete FamilyTree records, private app photo storage and local attachments; external URLs remain references.'];
             NativeArchiveFormat::validate($aData, $oManifest);
             $oZip->addFromString('data.json', $sJson);
             $oZip->addFromString('manifest.json', json_encode($oManifest, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
@@ -349,7 +357,13 @@ function (int $nTreeId, string $sPath) use (&$oStagedPaths): void {
                 }
                 $sContent = $oZip->getFromName($oFile['zipPath']);
                 if (!is_string($sContent) || !hash_equals($oFile['sha256'],hash('sha256',$sContent))) self::fail('The backup file was damaged during restore.');
-                $this->newFile($oOwner,$oDest,$sContent);
+                // CZ: Nové a starší kanonické galerie obnovit do AppData,
+                // které nevyvolává chybné Files Versions události cizího uživatele.
+                if (PhotoBinaryStorage::parts($oDest) !== null) {
+                    $this->oPhotoStorage->create($oDest, $sContent);
+                } else {
+                    $this->newFile($oOwner,$oDest,$sContent);
+                }
                 $oFilesCreated[] = $oDest;
                 $oPathMaps[$oSourceTree][$oOriginal] = $oDest;
             }
@@ -452,7 +466,10 @@ fn($oT)=>['id'=>$oT['treeId']],$oRestored),
         } catch (\Throwable $oError) {
             if ($oTransaction) $this->oDb->rollBack();
             foreach (array_reverse($oFilesCreated) as $sPath) {
-                try { $oOwner->get($sPath)->delete(); } catch (\Throwable) {}
+                try {
+                    if (PhotoBinaryStorage::parts($sPath) !== null) $this->oPhotoStorage->deleteFile($sPath);
+                    else $oOwner->get($sPath)->delete();
+                } catch (\Throwable) {}
             }
             throw $oError;
         } finally { $oZip->close(); }

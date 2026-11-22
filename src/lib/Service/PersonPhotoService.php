@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 /**
- * @file Soukromá galerie fotografií FamilyTree. Přílohy ukládá přes Files API vlastníka
- * rodokmenu a metadatově používá stávající tabulku dokumentů (bez migrace DB).
+ * @file Soukromá galerie fotografií FamilyTree. Nové fotografie ukládá do AppData,
+ * historické fotografie čte také z Files vlastníka (bez migrace databáze).
  * Maďarská notace: s = string, n = int, b = bool, a = array, o = objekt/mixed.
  */
 namespace OCA\HcFamilyTree\Service;
@@ -45,6 +45,7 @@ final class PersonPhotoService {
         private IUserManager $oUsers,
         private IGroupManager $oGroups,
         private ResearchJournalService $oJournal,
+        private PhotoBinaryStorage $oStorage,
     ) { $this->sUid = $oSession->getUser()?->getUID() ?? ''; }
 
     /**
@@ -197,15 +198,13 @@ final class PersonPhotoService {
             $aOriginal = $this->uploadedImage($this->oRequest->getUploadedFile('photo'), false);
             $aPortrait = $this->uploadedImage($this->oRequest->getUploadedFile('portrait'), true);
             $aPerson = $aContext['person']; $aTree = $aContext['tree'];
-            $oOwner = $this->oRoot->getUserFolder((string)$aTree['owner_uid']);
             $sFolder = 'Rodokmen/Fotografie/'.(int)$aTree['id'].'/'.(string)$aPerson['stable_id'].'/'.bin2hex(random_bytes(16));
             $sOriginal = $sFolder.'/original.'.$aOriginal['ext'];
             $sPortrait = $sFolder.'/portrait.jpg';
-            $oDirectory = $this->makeFolder($oOwner, $sFolder);
             $nDocumentId = null; $bCommitted = false;
             try {
-                $oDirectory->newFile('original.'.$aOriginal['ext'], $aOriginal['bytes']);
-                $oDirectory->newFile('portrait.jpg', $aPortrait['bytes']);
+                $this->oStorage->create($sOriginal, $aOriginal['bytes']);
+                $this->oStorage->create($sPortrait, $aPortrait['bytes']);
                 $sTitle = trim((string)($this->oRequest->getUploadedFile('photo')['name'] ?? 'Photo'));
                 $sTitle = substr(basename(str_replace('\\','/', $sTitle)), 0, 250);
                 if ($sTitle === '') $sTitle = 'Photo';
@@ -230,7 +229,7 @@ final class PersonPhotoService {
                 }
                 return new DataResponse(['ok'=>true,'photoId'=>$nDocumentId,'primary'=>$bSetPrimary]);
             } catch (\Throwable $oError) {
-                if (!$bCommitted) { try { $oDirectory->delete(); } catch (\Throwable) {} }
+                if (!$bCommitted) { try { $this->oStorage->deleteFolder($sOriginal); } catch (\Throwable) {} }
                 throw $oError;
             }
         } catch (\InvalidArgumentException $oError) {
@@ -250,24 +249,67 @@ final class PersonPhotoService {
         $aContext = $this->context($nPersonId,true);
         $aPhoto = $this->matchingPhoto($nPersonId,$nPhotoId);
         if (!$aContext || !$aPhoto) return new JSONResponse(['error'=>'Photo not found or access denied.'],404);
+        $bTransaction = false;
+        $sCreatedPath = '';
         try {
             $aPortrait = $this->uploadedImage($this->oRequest->getUploadedFile('portrait'),true);
             $sPath = (string)$aPhoto['source'];
             if (!NativeArchiveFormat::safePath($sPath)) throw new \InvalidArgumentException('Invalid portrait path.');
-            $oOwner = $this->oRoot->getUserFolder((string)$aContext['tree']['owner_uid']);
-            $oFile = $oOwner->get($sPath);
-            if (!$oFile instanceof File) throw new \InvalidArgumentException('Portrait file does not exist.');
-            $oFile->putContent($aPortrait['bytes']);
+            $sOriginalPath = (string)$aPhoto['file_path'];
+            $sOwnerUid = (string)$aContext['tree']['owner_uid'];
+            $nNow = time();
+            $this->oDb->beginTransaction(); $bTransaction = true;
+            $aUpdated = $aPhoto;
+            if (PhotoBinaryStorage::parts($sPath) !== null
+                && PhotoBinaryStorage::parts($sOriginalPath) !== null) {
+                // CZ: Úprava AppData; pro starší soubory se před přepsáním náhledu
+                // zkopíruje nedotčený originál z úložiště vlastníka.
+                $this->oStorage->replacePortrait($sOwnerUid, $sOriginalPath, $sPath, $aPortrait['bytes']);
+            } else {
+                // CZ: Legacy Obnova nemá kanonickou cestu. První úprava vytvoří
+                // novou soukromou AppData kopii; žádné historické soubory nemaže.
+                $sBytes = $this->oStorage->read($sOwnerUid, $sOriginalPath);
+                $sFolder = 'Rodokmen/Fotografie/'.(int)$aContext['tree']['id'].'/'
+                    .(string)$aContext['person']['stable_id'].'/'.bin2hex(random_bytes(16));
+                $sExtension = match ((string)$aPhoto['mime_type']) {
+                    'image/png'=>'png', 'image/webp'=>'webp', default=>'jpg'
+                };
+                $sNewOriginal = $sFolder.'/original.'.$sExtension;
+                $sNewPortrait = $sFolder.'/portrait.jpg';
+                $sCreatedPath = $sNewOriginal;
+                $this->oStorage->create($sNewOriginal, $sBytes);
+                $this->oStorage->create($sNewPortrait, $aPortrait['bytes']);
+                $oQ = $this->oDb->getQueryBuilder()->update('hc_familytree_documents');
+                $oQ->set('file_path', $oQ->createNamedParameter($sNewOriginal))
+                    ->set('source', $oQ->createNamedParameter($sNewPortrait))
+                    ->where($oQ->expr()->eq('id', $oQ->createNamedParameter($nPhotoId)))
+                    ->executeStatement();
+                $aUpdated['file_path'] = $sNewOriginal;
+                $aUpdated['source'] = $sNewPortrait;
+                if ((string)$aContext['person']['photo_url'] === $sPath) {
+                    $this->updatePrimary($aContext['person'], $sNewPortrait);
+                }
+            }
             $oQ = $this->oDb->getQueryBuilder()->update('hc_familytree_documents');
-            $oQ->set('updated_at',$oQ->createNamedParameter(time()))
+            $oQ->set('updated_at',$oQ->createNamedParameter($nNow))
                 ->where($oQ->expr()->eq('id',$oQ->createNamedParameter($nPhotoId)))->executeStatement();
+            $aUpdated['updated_at'] = $nNow;
             $this->oJournal->audit((int)$aContext['tree']['id'],'hc_familytree_documents',
                 (string)$aPhoto['stable_id'],'update',$this->sUid,$aPhoto,
-                array_merge($aPhoto,['updated_at'=>time()]),'Portrait crop/rotation changed');
+                $aUpdated,'Portrait crop/rotation changed');
+            $this->oDb->commit(); $bTransaction = false;
             return new DataResponse(['ok'=>true]);
         } catch (\InvalidArgumentException $oError) {
+            if ($bTransaction) $this->oDb->rollBack();
+            if ($sCreatedPath !== '') {
+                try { $this->oStorage->deleteFolder($sCreatedPath); } catch (\Throwable) {}
+            }
             return new JSONResponse(['error'=>$oError->getMessage()],400);
         } catch (\Throwable) {
+            if ($bTransaction) $this->oDb->rollBack();
+            if ($sCreatedPath !== '') {
+                try { $this->oStorage->deleteFolder($sCreatedPath); } catch (\Throwable) {}
+            }
             return new JSONResponse(['error'=>'Portrait could not be updated.'],500);
         }
     }
@@ -326,10 +368,8 @@ final class PersonPhotoService {
         $sPath = (string)($sVariant === 'original' ? $aPhoto['file_path'] : $aPhoto['source']);
         if (!NativeArchiveFormat::safePath($sPath)) return new JSONResponse(['error'=>'Invalid photo path.'],404);
         try {
-            $oOwner = $this->oRoot->getUserFolder((string)$aContext['tree']['owner_uid']);
-            $oFile = $oOwner->get($sPath);
-            if (!$oFile instanceof File || $oFile->getSize() > self::MAX_ORIGINAL) throw new \RuntimeException();
-            $sContents = (string)$oFile->getContent();
+            $sContents = $this->oStorage->read((string)$aContext['tree']['owner_uid'], $sPath);
+            if (strlen($sContents) > self::MAX_ORIGINAL) throw new \RuntimeException();
             $sMime = $sVariant === 'portrait' ? 'image/jpeg' : (string)$aPhoto['mime_type'];
             if (!in_array($sMime,['image/jpeg','image/png','image/webp'],true)) throw new \RuntimeException();
             return new DataDisplayResponse($sContents,200,[
@@ -380,6 +420,13 @@ final class PersonPhotoService {
      * @return void
      */
     private function removeFiles(array $aTree,array $aPhoto): void {
+        $sPath = (string)($aPhoto['file_path'] ?? '');
+        if (PhotoBinaryStorage::parts($sPath) !== null) {
+            try { $this->oStorage->deleteFolder($sPath); } catch (\Throwable) {}
+            // Historické soubory v Files vlastníka mohou zůstat jako bezpečná
+            // kopie, nejsou již odkazované metadaty; nerozbíjej Files Versions.
+            return;
+        }
         try {
             $oOwner = $this->oRoot->getUserFolder((string)$aTree['owner_uid']);
             foreach (['file_path','source'] as $sKey) {

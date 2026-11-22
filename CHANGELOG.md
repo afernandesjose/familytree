@@ -1,5 +1,27 @@
+## 1.3.2 (2026-11-21)
+- Fix desktop panel resize, transfer/journal dialog close handling and show effective per-tree ownership and sharing access in statistics.
+
+## 1.3.1 (2026-11-21)
+- Ownership transfer: explicit authorization and confirmation without typing a tree name or entering passwords.
+- Desktop resizable tree sidebar with saved width and truncated long names.
+
+## 1.3.0 (2026-11-19)
+- Převod vlastnictví rodokmenu na konkrétního uživatele Nextcloudu, potvrzení, audit, zachování fotografií a importovaných příloh v AppData a zachování sdílení.
+- Údaje i úplné zálohy po převodu zůstávají přístupné novému vlastníkovi; při problému s přílohami se převod bezpečně zastaví.
+
+## 1.2.2 (2026-11-18)
+- Shared photo uploads now write through private application AppData, not the tree owner’s Files. This avoids cross-user Files Versions write hooks; existing photo files remain readable and are copied on first re-edit without overwriting originals.
+- Complete native ZIP v2 export/restore reads/writes application photo storage and legacy owner Files, preserving photo bindings while remapping tree/person IDs. No schema or archive format bump.
+- Dashboard continues to enforce access per tree, displays recent changes by any authorized contributor (with the audit actor), and refreshes on tab return and every 20 seconds. Tests cover private vs shared trees and cross-user edits.
+- Requires NAS-level validation of Nextcloud Files Versions behavior and real export/restore before release.
+
+## 1.2.1 (2026-11-18)
+- Dashboard widget: actual counts for owned and shared family trees; recent person edits and newly created events from access-checked audit history.
+- Automatic widget refresh, jump to the first user-ordered tree, links to relevant people, and the original approved FamilyTree icon.
+- No database schema changes. Photography issue with Nextcloud Files Versions remains under investigation.
+
 ## 1.2.0 (2026-11-17)
-- Updated both README files with three plain hyperlinks to original `screenshot/01.png`, `02.png`, `03.png` on GitHub; removed the former embedded screenshot.
+- Updated both README files with three embedded external images to original `screenshot/01.png`, `02.png`, `03.png` on GitHub; removed the former embedded screenshot.
 - Nextcloud App Store XML continues to reference exactly these three external screenshots; app metadata and version now indicate 1.2.0.
 - Preserved the original approved app icon, all genealogy features, photo storage, and backup behavior; no screenshots are packaged.
 

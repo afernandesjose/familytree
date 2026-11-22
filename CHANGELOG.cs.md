@@ -1,5 +1,26 @@
+## 1.3.2 (2026-11-21)
+- Oprava nastavitelné šířky levého panelu, rozložení potvrzení převodu, ochrany deníku a převodu proti nechtěnému zavření. Statistiky zobrazují vlastníka, oprávnění a způsob sdílení.
+
+## 1.3.1 (2026-11-21)
+- Předání vlastnictví bez opisování názvu: výslovné potvrzení uživatele a oprávnění ověřené na serveru. Hesla se nezadávají.
+- Nastavitelná šířka levého panelu tažením/klávesnicí, zapamatování v prohlížeči a zkracování dlouhých názvů výpustkou.
+
+## 1.3.0 (2026-11-19)
+- Bezpečné předání vlastnictví rodokmenu jinému aktivnímu uživateli, audit a nedestruktivní převod souborů do soukromého AppData.
+
+## 1.2.2 (2026-11-18)
+- Ukládání nových fotografií do soukromého AppData aplikace; starší fotografie u vlastníka zůstávají čitelné a při editaci se originál bezpečně zachová.
+- Úplná záloha ZIP v2 obsahuje nové i původní fotografie, při obnově mapuje jejich cesty na nová ID bez změny formátu.
+- Widget ukazuje úpravy libovolného oprávněného editora sdíleného rodokmenu, obnovuje údaje po návratu na stránku a po 20 sekundách.
+- Reálné testy Nextcloudu, exportu a obnovy a schválení HDS/CP21 zatím neproběhly.
+
+## 1.2.1 (2026-11-18)
+- Dashboard widget: actual counts for owned and shared family trees; recent person edits and newly created events from access-checked audit history.
+- Automatic widget refresh, jump to the first user-ordered tree, links to relevant people, and the original approved FamilyTree icon.
+- No database schema changes. Photography issue with Nextcloud Files Versions remains under investigation.
+
 ## 1.2.0 – 2026-11-17
-- Obě README: odstraněn původní vložený obrázek a doplněny tři běžné odkazy na schválené snímky ve složce `screenshot/` na GitHubu.
+- Obě README: nahrazen původní obrázek třemi přímo zobrazenými screenshoty pomocí externích Markdown URL ze složky `screenshot/` na GitHubu; PNG se do balíčků nepřibalují.
 - Metadata Nextcloud App Storu zachovávají všechny tři URL; verze a cache názvy JS/CSS sjednoceny na 1.2.0.
 - Bez přidání PNG do archivů, změny schválené ikony, datových migrací či funkčních úprav.
 

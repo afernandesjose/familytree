@@ -84,6 +84,21 @@ public function __construct(IRequest $oRequest, private GenealogyService $oServi
  * @return DataResponse HTTP odpověď s výslednými daty nebo chybovou zprávou ve formátu JSON.
  */
     #[NoAdminRequired] public function deleteTree(int $id): DataResponse { return $this->oService->deleteTree($id); }
+    /** @brief Bezpečně předá úplný rodokmen novému vlastníkovi v Nextcloudu.
+     * @param int $id ID rodokmenu.
+     * @return DataResponse Výsledek převodu.
+     */
+    #[NoAdminRequired] public function transferTree(int $id): DataResponse { return $this->oService->transferTree($id); }
+    /** @brief Vrátí přístupnému uživateli přílohu záznamu rodokmenu.
+     * @param int $id ID dokumentu.
+     * @return Response Ověřená příloha.
+     */
+    #[NoAdminRequired] public function documentFile(int $id): Response { return $this->oService->documentFile($id); }
+    /** @brief Vrátí původní GEDCOM/GEDZIP pouze oprávněnému uživateli stromu.
+     * @param int $id ID rodokmenu.
+     * @return Response Ověřený soubor.
+     */
+    #[NoAdminRequired] public function importSourceFile(int $id): Response { return $this->oService->importSourceFile($id); }
     /**
  * @brief Načte úkoly, hledání, důkazy a historii výzkumného deníku.
  * @param int $treeId Identifikátor rodokmenu.

@@ -1,4 +1,4 @@
-# Rodokmen (FamilyTree) 1.2.0 pro Nextcloud
+# Rodokmen (FamilyTree) 1.3.2 pro Nextcloud
 
 **Jazyk:** [English](README.md) · Česky
 
@@ -19,6 +19,16 @@ Nextcloud App Store používá stejné externí screenshoty uvedené v `appinfo/
 **Dokumentace ve verzi 1.2.0:** V README se přímo zobrazují všechny tři původní screenshoty z GitHubu prostřednictvím externích URL. Žádné PNG soubory se do distribučních archivů nepřidávají.
 
 **Oprava 1.1.10:** Portréty osob ve stromu se správně obnovují z místní galerie i po překreslení a po uložení údajů osoby. Původní fotografie zůstávají beze změny. **Od 1.1.9:** V levém panelu můžete odemknout pořadí rodokmenů, přesunout je myší, dotykem nebo šipkami a pořadí opět zamknout. Pořadí se ukládá k uživatelskému účtu na serveru, nikoli pouze do prohlížeče. V **Nastavení → Seznam a úvodní rodokmen** si uživatel zvolí vlastní úvodní rodokmen, nebo převezme výchozí volbu správce. Nepřístupný výchozí rodokmen se bezpečně nahradí prvním dostupným.
+
+**Upraveno v 1.3.2:** Oprava tažení a změny šířky seznamu rodokmenů na počítači, čitelnější dialog předání i na menších obrazovkách a ochrana před nechtěným zavřením předání a výzkumného deníku kliknutím mimo okno nebo Escape. Statistiky stromu nově ukazují vlastníka, skutečná práva a zdroj sdílení.
+
+**Upraveno v 1.3.1:** Předání vlastnictví už nevyžaduje opsání názvu rodokmenu ani heslo Nextcloudu; výslovné potvrzení a serverové ověření oprávnění zůstává povinné. Na počítači lze tažením oddělovače nebo šipkami změnit šířku seznamu rodokmenů (uloží se v prohlížeči). Dlouhé názvy a popisy se zkracují výpustkou, celý název je dostupný po najetí myší.
+
+**Nově v 1.3.0:** Vlastník může předat celý rodokmen konkrétnímu aktivnímu uživateli Nextcloudu v nabídce ⋯ → Předat vlastnictví rodokmenu. Příjemce se stane vlastníkem a získá správu sdílení i možnost odstranit rodokmen. Původní vlastník převod výslovně potvrdí v samostatném dialogu a změna se zapisuje do historie. Historické fotografie, badatelská média a původní importní přílohy se před převodem zachovají v soukromém AppData bez mazání souborů dosavadního vlastníka. Lokální dokumenty se po převodu otevírají přes chráněné rozhraní FamilyTree. Při chybě přílohy se vlastnictví nezmění. Přístup přes dřívější skupinové sdílení může původnímu vlastníkovi zůstat.
+
+**Nově v 1.2.2:** Fotografie včetně fotografií sdílených rodokmenů se nyní zapisují do soukromého AppData aplikace místo souborů jiného uživatele. Starší originály se nadále načítají a při úpravě se bezpečně zkopírují. Úplná záloha ZIP v2 obsahuje originály i portréty. Widget zaznamenává změny všech oprávněných editorů vlastních i sdílených rodokmenů včetně informace, kdo osobu upravil, a obnoví data také při návratu na nástěnku. Databázové schéma ani formát zálohy se nemění.
+
+**Nově v 1.2.1:** Widget na nástěnce pravidelně obnovuje počty, zobrazuje naposledy upravené osoby a nově vložené události. Tlačítko nahoře vede přímo na první rodokmen v osobním pořadí; widget používá původní schválenou ikonu aplikace.
 
 ## Doporučená instalace — pro běžné uživatele
 
@@ -80,9 +90,9 @@ Vlastní úplná záloha FamilyTree ZIP není totéž co výměnný formát GEDC
 
 ## Struktura repozitáře a vydávání
 
-Veřejný **GitHub zdrojový ZIP** obsahuje `src/` s úplnou aplikací, veřejné návody v `docs/`, obrázky, licenci, changelogy a potřebné instalační a sestavovací skripty. Záměrně neobsahuje soukromé klíče, konfigurace, interní HDS/CP21 auditní podklady, provozní logy ani testovací protokoly.
+Veřejný **GitHub zdrojový ZIP** obsahuje `src/` s úplnou aplikací, veřejné návody v `docs/`, schválenou ikonu aplikace, licenci, changelogy a potřebné instalační a sestavovací skripty. Záměrně neobsahuje soukromé klíče, konfigurace, interní HDS/CP21 auditní podklady, provozní logy ani testovací protokoly.
 
-Příkaz `sh build-release.sh` vytvoří **nepodepsaný běhový ZIP** (`release/hc_familytree-1.2.0.zip`) požadovaný Publisherem CP21, **nepodepsaný přípravný TAR.GZ** a právě jeden čistý zdrojový archiv **`release/hc_familytree-1.1.10-full-source.zip`**. **Sám nic nepodepisuje ani nezveřejňuje.** Teprve Hacesoft Publisher provede závazné kontroly, podepíše aplikaci certifikátem Nextcloudu a připraví finální TAR.GZ včetně podpisu archivu pro Nextcloud App Store.
+Příkaz `sh build-release.sh` vytvoří **nepodepsaný běhový ZIP** (`release/hc_familytree-1.3.2.zip`) požadovaný Publisherem CP21, **nepodepsaný přípravný TAR.GZ** a právě jeden čistý zdrojový archiv **`release/hc_familytree-1.3.2-full-source.zip`**. **Sám nic nepodepisuje ani nezveřejňuje.** Teprve Hacesoft Publisher provede závazné kontroly, podepíše aplikaci certifikátem Nextcloudu a připraví finální TAR.GZ včetně podpisu archivu pro Nextcloud App Store.
 
 **Licence:** [AGPL-3.0-or-later](LICENSE). Chyby hlaste přes [GitHub Issues](https://github.com/hacesoft/familytree/issues).
 

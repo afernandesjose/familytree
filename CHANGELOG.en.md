@@ -1,5 +1,26 @@
+## 1.3.2 (2026-11-21)
+- Fixed desktop sidebar dragging and small-screen transfer dialog overflow; transfer and journal no longer close on backdrop/Escape. Tree statistics show effective user permissions and owner.
+
+## 1.3.1 (2026-11-21)
+- Ownership transfer no longer requires typing the tree name. Explicit confirmation and server-side authorization remain mandatory; account passwords are never collected.
+- Resizable tree list panel with pointer/keyboard input, browser persistence, and ellipsis for long tree names.
+
+## 1.3.0 (2026-11-19)
+- Transfer entire family tree ownership to another active Nextcloud user, with explicit confirmation, audit history, and non-destructive preservation of private attachments in AppData.
+
+## 1.2.2 (2026-11-18)
+- Private AppData for new photos; retains legacy owner-File reads and safe copy-on-edit of original images.
+- Native ZIP v2 backup/restore supports both photo locations and remaps paths into restored trees.
+- Shared-tree dashboard shows contributors’ recent edits and refreshes on return and at 20-second intervals; permission-isolated counts tested with different users.
+- Live Nextcloud upload, export/restore and HDS/CP21 checks remain pending.
+
+## 1.2.1 (2026-11-18)
+- Dashboard widget: actual counts for owned and shared family trees; recent person edits and newly created events from access-checked audit history.
+- Automatic widget refresh, jump to the first user-ordered tree, links to relevant people, and the original approved FamilyTree icon.
+- No database schema changes. Photography issue with Nextcloud Files Versions remains under investigation.
+
 ## 1.2.0 – 2026-11-17
-- Replace the previous README image embed with three plain external links to original screenshots hosted in the `screenshot/` folder on GitHub.
+- Show three original GitHub-hosted screenshots directly in both READMEs using external Markdown image URLs; no PNG files are bundled.
 - Keep the same three App Store screenshot URLs in `info.xml`; update release version and JS/CSS cache keys to 1.2.0.
 - No bundled screenshot PNGs, icon changes, data migrations, or feature changes.
 
