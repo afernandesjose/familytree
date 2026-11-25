@@ -9,7 +9,7 @@ declare(strict_types=1);
  * Nextcloud API names are stable contractual identifiers.
  */
 
-namespace OCA\HcFamilyTree\Service;
+namespace OCA\Lignees\Service;
 
 /** Read GEDCOM 7 into the application's private evidence records. The uploaded GEDCOM is also retained verbatim. */
 final class Gedcom7Package {

@@ -4,10 +4,10 @@ declare(strict_types=1);
  * @file HTTP API pro soukromé fotografie osoby v FamilyTree.
  * Maďarská notace: s = string, n = int, b = bool, a = array, o = objekt.
  */
-namespace OCA\HcFamilyTree\Controller;
+namespace OCA\Lignees\Controller;
 
-use OCA\HcFamilyTree\AppInfo\Application;
-use OCA\HcFamilyTree\Service\PersonPhotoService;
+use OCA\Lignees\AppInfo\Application;
+use OCA\Lignees\Service\PersonPhotoService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;

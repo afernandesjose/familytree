@@ -8,7 +8,7 @@ declare(strict_types=1);
  * Prefixed identifiers are internal; wire-format keys, route names and public
  * Nextcloud API names are stable contractual identifiers.
  */
-namespace OCA\HcFamilyTree\Service;
+namespace OCA\Lignees\Service;
 
 /**
  * CZ: Přenosná forma výzkumného deníku. Audit a návrhy se přenášejí jen úplnou zálohou v2.

@@ -8,9 +8,9 @@ declare(strict_types=1);
  * Prefixed identifiers are internal; wire-format keys, route names and public
  * Nextcloud API names are stable contractual identifiers.
  */
-namespace OCA\HcFamilyTree\Controller;
-use OCA\HcFamilyTree\AppInfo\Application;
-use OCA\HcFamilyTree\Service\GenealogyService;
+namespace OCA\Lignees\Controller;
+use OCA\Lignees\AppInfo\Application;
+use OCA\Lignees\Service\GenealogyService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\DataResponse;

@@ -1,5 +1,5 @@
 OC.L10N.register(
-  "hc_familytree",
+  "lignees",
   {
   " Check the new tree before retrying; the app does not delete it automatically.": " Vérifiez le nouvel arbre avant de réessayer ; l'application ne le supprime pas automatiquement.",
   " cannot be started": " ne peut pas démarrer",

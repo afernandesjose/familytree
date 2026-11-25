@@ -10,7 +10,7 @@ declare(strict_types=1);
  * Nextcloud API names are stable contractual identifiers.
  */
 
-namespace OCA\HcFamilyTree\Migration;
+namespace OCA\Lignees\Migration;
 
 use Closure;
 use OCP\DB\ISchemaWrapper;

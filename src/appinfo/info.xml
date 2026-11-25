@@ -1,67 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
-    <id>hc_familytree</id>
+    <id>lignees</id>
 
-    <name lang="cs">Rodokmen</name>
-    <name>FamilyTree</name>
+    <name>Lignées</name>
+    <name lang="en">Lineages</name>
 
-    <summary lang="en">Private family trees in Nextcloud with relationships, photos, sources and GEDCOM 7 import.</summary>
-    <summary lang="cs">Soukromé rodokmeny v Nextcloudu: vztahy, fotografie, prameny a import GEDCOM 7.</summary>
+    <summary>Un arbre généalogique familial lisible et partagé dans Nextcloud : couples côte à côte, enfants sous leurs parents, photos et GEDCOM.</summary>
+    <summary lang="en">A readable, shared family tree in Nextcloud: couples side by side, children under their parents, photos and GEDCOM.</summary>
 
-    <description lang="en"># FamilyTree
+    <description># Lignées
 
-Keep family history in your own Nextcloud instance. Create, explore and share family trees without publishing personal records to an external service.
+Arbre généalogique familial pour Nextcloud, dérivé de [FamilyTree de hacesoft](https://github.com/hacesoft/familytree).
 
-## Features
-- Interactive family trees, people, relatives and events
-- Photos, documents, sources, citations and research notes
-- FamilySearch GEDCOM 7 and GEDZIP import with research records
-- Access-controlled sharing and safe ownership transfer to another Nextcloud user
-- Responsive layout with multilingual interface
+## Ce qui change par rapport à FamilyTree
+- Placement fiable de l'arbre (bibliothèque family-chart) : couples côte à côte, enfants sous leurs parents, aucune ligne qui se croise
+- Nouvelle interface « Lignées &amp; Mémoire » : cartes médaillons, thèmes parchemin et émeraude, fiche latérale, recherche, focus sur une lignée
+- Un arbre commun modifiable par toute la famille
+- Les anniversaires de l'arbre alimentent un agenda Nextcloud
+- Aucune dépendance à Hacesoft Shared App Core
 
-## Installation
-Install the signed official release from Nextcloud Apps. For developers/testers only, the source repository provides a Docker install.sh.
+## Conservé de FamilyTree
+- Données, partage, historique, photos, import et export GEDCOM 7
 
-## Requirements
-- Nextcloud 35
-- Hacesoft Shared App Core 0.18.8 or newer, installed and enabled
+## Prérequis
+- Nextcloud 35</description>
+    <description lang="en"># Lineages
 
-## Documentation
-https://github.com/hacesoft/familytree</description>
-    <description lang="cs"># Rodokmen
+A family tree app for Nextcloud, forked from [hacesoft's FamilyTree](https://github.com/hacesoft/familytree).
 
-Správa a sdílení rodinné historie na vlastním Nextcloudu bez zveřejňování osobních záznamů na externích službách.
+- Reliable layout (family-chart): couples side by side, children under their parents, no crossing lines
+- New "Lineages &amp; Memory" interface: medallion cards, parchment and emerald themes, side drawer, search, lineage focus
+- One tree shared and edited by the whole family
+- Birthdays feed a Nextcloud calendar
+- Keeps FamilyTree's data, sharing, history, photos and GEDCOM 7 import/export</description>
 
-## Funkce
-- Interaktivní rodokmeny, osoby, příbuzenské vztahy a události
-- Fotografie, dokumenty, prameny, citace a badatelské poznámky
-- Import FamilySearch GEDCOM 7 a GEDZIP
-- Sdílení s oprávněními a bezpečné předání vlastnictví jinému uživateli Nextcloudu
-- Responzivní vícejazyčné rozhraní
-
-## Instalace
-Běžná instalace: podepsané oficiální vydání přímo přes Aplikace v Nextcloudu. Zdrojový skript install.sh je pouze pro vývojáře a testery Dockeru.
-
-## Požadavky
-- Nextcloud 35
-- Hacesoft Shared App Core 0.18.8 nebo novější
-
-## Dokumentace
-https://github.com/hacesoft/familytree</description>
-
-    <version>1.3.2</version>
+    <version>2.0.0</version>
     <licence>AGPL-3.0-or-later</licence>
+    <author homepage="https://github.com/afernandesjose">Arnaldo Fernandes José</author>
     <author homepage="https://github.com/hacesoft">hacesoft</author>
-    <namespace>HcFamilyTree</namespace>
+    <namespace>Lignees</namespace>
     <category>organization</category>
 
-    <website>https://github.com/hacesoft/familytree</website>
-    <bugs>https://github.com/hacesoft/familytree/issues</bugs>
-
-    <screenshot small-thumbnail="https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/01.png">https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/01.png</screenshot>
-    <screenshot>https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/02.png</screenshot>
-    <screenshot>https://raw.githubusercontent.com/hacesoft/familytree/main/screenshot/03.png</screenshot>
+    <website>https://github.com/afernandesjose/familytree</website>
+    <bugs>https://github.com/afernandesjose/familytree/issues</bugs>
 
     <dependencies>
         <nextcloud min-version="35" max-version="35"/>
@@ -69,9 +51,9 @@ https://github.com/hacesoft/familytree</description>
 
     <navigations>
         <navigation>
-            <name>FamilyTree</name>
-            <namespace>HcFamilyTree</namespace>
-            <route>hc_familytree.page.index</route>
+            <name>Lignées</name>
+            <namespace>Lignees</namespace>
+            <route>lignees.page.index</route>
             <order>30</order>
             <icon>app.svg</icon>
         </navigation>

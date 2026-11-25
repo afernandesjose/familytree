@@ -8,14 +8,14 @@ declare(strict_types=1);
  * Prefixed identifiers are internal; wire-format keys, route names and public
  * Nextcloud API names are stable contractual identifiers.
  */
-namespace OCA\HcFamilyTree\AppInfo;
-use OCA\HcFamilyTree\Dashboard\FamilyTreeWidget;
+namespace OCA\Lignees\AppInfo;
+use OCA\Lignees\Dashboard\FamilyTreeWidget;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 final class Application extends App implements IBootstrap {
-    public const APP_ID = 'hc_familytree';
+    public const APP_ID = 'lignees';
     /**
  * @brief Inicializuje instanci a propojí předané závislosti.
  * @return void Konstruktor nevrací návratovou hodnotu.

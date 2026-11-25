@@ -8,7 +8,7 @@ declare(strict_types=1);
  * Prefixed identifiers are internal; wire-format keys, route names and public
  * Nextcloud API names are stable contractual identifiers.
  */
-namespace OCA\HcFamilyTree\Service;
+namespace OCA\Lignees\Service;
 
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -193,7 +193,7 @@ function (int $nTreeId, string $sPath) use (&$oStagedPaths): void {
             $sJson = json_encode($aData, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR);
             if (strlen($sJson) > NativeArchiveFormat::MAX_DATA_BYTES) self::fail('The database part of the backup is too large.');
             $oManifest = ['format' => NativeArchiveFormat::ID, 'formatVersion' => NativeArchiveFormat::VERSION,
-                'appId' => 'hc_familytree', 'createdAt' => gmdate('c'), 'sourceVersion' => $this->oAppManager->getAppVersion('hc_familytree'),
+                'appId' => 'lignees', 'createdAt' => gmdate('c'), 'sourceVersion' => $this->oAppManager->getAppVersion('lignees'),
                 'treeCount' => count($aTrees), 'dataSha256' => hash('sha256', $sJson), 'files' => $aFiles,
                 'info' => 'Complete FamilyTree records, private app photo storage and local attachments; external URLs remain references.'];
             NativeArchiveFormat::validate($aData, $oManifest);

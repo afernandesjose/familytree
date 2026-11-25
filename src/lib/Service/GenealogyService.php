@@ -8,7 +8,7 @@ declare(strict_types=1);
  * Prefixed identifiers are internal; wire-format keys, route names and public
  * Nextcloud API names are stable contractual identifiers.
  */
-namespace OCA\HcFamilyTree\Service;
+namespace OCA\Lignees\Service;
 use OCP\IConfig; use OCP\AppFramework\Http\DataResponse; use OCP\AppFramework\Http\JSONResponse; use OCP\AppFramework\Http\DataDisplayResponse; use OCP\AppFramework\Http\Response; use OCP\IDBConnection; use OCP\IGroupManager; use OCP\IL10N; use OCP\IRequest; use OCP\IUserManager; use OCP\IUserSession;
 class GenealogyService {
  private string $sUid;
@@ -353,7 +353,7 @@ fn($nA,$aB)=>(int)$aB['updated_at']<=>(int)$nA['updated_at']);return new DataRes
   public function treePreferences():DataResponse {
    if($this->sUid==='')return $this->deny();
    $aAllowed=$this->visibleTreeIds();
-   $aRaw=json_decode($this->oConfig->getUserValue($this->sUid,'hc_familytree','tree_order','[]'),true);
+   $aRaw=json_decode($this->oConfig->getUserValue($this->sUid,'lignees','tree_order','[]'),true);
    if(!is_array($aRaw))$aRaw=[];
    $aOrder=[];
    foreach($aRaw as $oId){
@@ -362,14 +362,14 @@ fn($nA,$aB)=>(int)$aB['updated_at']<=>(int)$nA['updated_at']);return new DataRes
     $nId=(int)$oId;
     if(in_array($nId,$aAllowed,true)&&!in_array($nId,$aOrder,true))$aOrder[]=$nId;
    }
-   $nUser=(int)$this->oConfig->getUserValue($this->sUid,'hc_familytree','start_tree_id','0');
-   $nGlobal=(int)$this->oConfig->getAppValue('hc_familytree','admin_start_tree_id','0');
+   $nUser=(int)$this->oConfig->getUserValue($this->sUid,'lignees','start_tree_id','0');
+   $nGlobal=(int)$this->oConfig->getAppValue('lignees','admin_start_tree_id','0');
    // Do not expose inaccessible tree identifiers to other users.
    $nUser=in_array($nUser,$aAllowed,true)?$nUser:0;
    $nGlobal=in_array($nGlobal,$aAllowed,true)?$nGlobal:0;
    return new DataResponse([
     'treeOrder'=>$aOrder,
-    'orderLocked'=>$this->oConfig->getUserValue($this->sUid,'hc_familytree','tree_order_locked','1')!=='0',
+    'orderLocked'=>$this->oConfig->getUserValue($this->sUid,'lignees','tree_order_locked','1')!=='0',
     'userStartTreeId'=>$nUser,
     'adminStartTreeId'=>$nGlobal,
     'startTreeId'=>$nUser?:$nGlobal,
@@ -388,7 +388,7 @@ fn($nA,$aB)=>(int)$aB['updated_at']<=>(int)$nA['updated_at']);return new DataRes
    $aOrder=null;$bLocked=null;$nUser=null;
    // Validate every supplied setting before any write (no partially applied preference updates).
    if(array_key_exists('treeOrder',$aBody)){
-    if($this->oConfig->getUserValue($this->sUid,'hc_familytree','tree_order_locked','1')!=='0')
+    if($this->oConfig->getUserValue($this->sUid,'lignees','tree_order_locked','1')!=='0')
      return new JSONResponse(['error'=>$this->oL10n->t('Unlock tree ordering before moving family trees.')],409);
     if(!is_array($aBody['treeOrder'])||count($aBody['treeOrder'])>500)
      return new JSONResponse(['error'=>$this->oL10n->t('Invalid family tree order.')],400);
@@ -413,9 +413,9 @@ fn($nA,$aB)=>(int)$aB['updated_at']<=>(int)$nA['updated_at']);return new DataRes
     $nUser=(int)$oId;
     if($nUser!==0&&!in_array($nUser,$aAllowed,true))return $this->deny();
    }
-   if($aOrder!==null)$this->oConfig->setUserValue($this->sUid,'hc_familytree','tree_order',json_encode($aOrder,JSON_THROW_ON_ERROR));
-   if($bLocked!==null)$this->oConfig->setUserValue($this->sUid,'hc_familytree','tree_order_locked',$bLocked?'1':'0');
-   if($nUser!==null)$this->oConfig->setUserValue($this->sUid,'hc_familytree','start_tree_id',(string)$nUser);
+   if($aOrder!==null)$this->oConfig->setUserValue($this->sUid,'lignees','tree_order',json_encode($aOrder,JSON_THROW_ON_ERROR));
+   if($bLocked!==null)$this->oConfig->setUserValue($this->sUid,'lignees','tree_order_locked',$bLocked?'1':'0');
+   if($nUser!==null)$this->oConfig->setUserValue($this->sUid,'lignees','start_tree_id',(string)$nUser);
    return $this->treePreferences();
   }
 
@@ -431,7 +431,7 @@ fn($nA,$aB)=>(int)$aB['updated_at']<=>(int)$nA['updated_at']);return new DataRes
     return new JSONResponse(['error'=>$this->oL10n->t('Invalid startup family tree.')],400);
    $nId=(int)$oId;
    if($nId!==0&&!in_array($nId,$this->visibleTreeIds(),true))return $this->deny();
-   $this->oConfig->setAppValue('hc_familytree','admin_start_tree_id',(string)$nId);
+   $this->oConfig->setAppValue('lignees','admin_start_tree_id',(string)$nId);
    return $this->treePreferences();
   }
 

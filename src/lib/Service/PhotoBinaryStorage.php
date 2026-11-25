@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Nové snímky jsou v AppData aplikace; staré obrázky v souborech vlastníka zůstávají čitelné.
  * Maďarská notace: s = string, n = int, a = array, o = objekt, b = bool.
  */
-namespace OCA\HcFamilyTree\Service;
+namespace OCA\Lignees\Service;
 
 use OCP\Files\File;
 use OCP\Files\IAppData;

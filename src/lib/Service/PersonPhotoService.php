@@ -5,7 +5,7 @@ declare(strict_types=1);
  * historické fotografie čte také z Files vlastníka (bez migrace databáze).
  * Maďarská notace: s = string, n = int, b = bool, a = array, o = objekt/mixed.
  */
-namespace OCA\HcFamilyTree\Service;
+namespace OCA\Lignees\Service;
 
 use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\DataResponse;

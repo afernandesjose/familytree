@@ -8,7 +8,7 @@ declare(strict_types=1);
  * Prefixed identifiers are internal; wire-format keys, route names and public
  * Nextcloud API names are stable contractual identifiers.
  */
-namespace OCA\HcFamilyTree\Service;
+namespace OCA\Lignees\Service;
 
 /**
  * Export the visible, editable family graph to FamilySearch GEDCOM 7.0.
@@ -128,7 +128,7 @@ final class Gedcom7Exporter {
             foreach ($oFamily['parents'] as $nId) $oAsParent[$nId][$oXref] = $oXref;
             foreach ($oFamily['children'] as $nId) $oAsChild[$nId][$oXref] = $oXref;
         }
-        $aLines = ['0 HEAD','1 SOUR HcFamilyTree','1 GEDC','2 VERS 7.0','1 CHAR UTF-8'];
+        $aLines = ['0 HEAD','1 SOUR Lignees','1 GEDC','2 VERS 7.0','1 CHAR UTF-8'];
         foreach ($sPeopleById as $nId => $oPerson) {
             $aLines[] = '0 @I' . $nId . '@ INDI';
             $oGiven = trim((string)($oPerson['given_name'] ?? ''));

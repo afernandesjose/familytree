@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Maďarská notace: s = string, o = objekt, n = číslo.
  * Nemění obsah zálohy ani její formát; výhradně jméno souboru ke stažení.
  */
-namespace OCA\HcFamilyTree\Service;
+namespace OCA\Lignees\Service;
 
 final class ExportFilename {
     /**

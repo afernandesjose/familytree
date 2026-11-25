@@ -8,7 +8,7 @@ declare(strict_types=1);
  * Prefixed identifiers are internal; wire-format keys, route names and public
  * Nextcloud API names are stable contractual identifiers.
  */
-namespace OCA\HcFamilyTree\Service;
+namespace OCA\Lignees\Service;
 
 /** Portable, explicit, versioned representation of all FamilyTree database rows. */
 final class NativeArchiveFormat {
@@ -37,7 +37,7 @@ final class NativeArchiveFormat {
  */
     public static function validate(array $aData, array $aManifest): void {
         if (($aManifest['format'] ?? null) !== self::ID || ($aManifest['formatVersion'] ?? null) !== self::VERSION
-            || ($aManifest['appId'] ?? null) !== 'hc_familytree' || !isset($aManifest['files']) || !is_array($aManifest['files']) || !array_is_list($aManifest['files'])) {
+            || !in_array(($aManifest['appId'] ?? null), ['lignees', 'hc_familytree'], true) || !isset($aManifest['files']) || !is_array($aManifest['files']) || !array_is_list($aManifest['files'])) {
             throw new \InvalidArgumentException('Unknown or unsupported FamilyTree backup format.');
         }
         $aTables = $aData['tables'] ?? null;

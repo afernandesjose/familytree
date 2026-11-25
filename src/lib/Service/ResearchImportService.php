@@ -9,7 +9,7 @@ declare(strict_types=1);
  * Nextcloud API names are stable contractual identifiers.
  */
 
-namespace OCA\HcFamilyTree\Service;
+namespace OCA\Lignees\Service;
 
 use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\JSONResponse;

@@ -1,0 +1,161 @@
+/* Lignées — thème « Lignées & Mémoire » (parchemin / émeraude) */
+@font-face { font-family: "Cormorant Garamond"; font-weight: 500; font-display: swap; src: url(polices/cormorant-garamond-latin-500-normal.woff2) format("woff2"); }
+@font-face { font-family: "Cormorant Garamond"; font-weight: 600; font-display: swap; src: url(polices/cormorant-garamond-latin-600-normal.woff2) format("woff2"); }
+@font-face { font-family: "Cormorant Garamond"; font-weight: 700; font-display: swap; src: url(polices/cormorant-garamond-latin-700-normal.woff2) format("woff2"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-weight: 400; font-display: swap; src: url(polices/plus-jakarta-sans-latin-400-normal.woff2) format("woff2"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-weight: 500; font-display: swap; src: url(polices/plus-jakarta-sans-latin-500-normal.woff2) format("woff2"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-weight: 600; font-display: swap; src: url(polices/plus-jakarta-sans-latin-600-normal.woff2) format("woff2"); }
+@font-face { font-family: "Plus Jakarta Sans"; font-weight: 700; font-display: swap; src: url(polices/plus-jakarta-sans-latin-700-normal.woff2) format("woff2"); }
+
+#lignees {
+  --fond: #f6f1e7; --grille: rgba(164,134,82,.11); --surface: rgba(255,252,246,.94);
+  --carte: #fffdf9; --carte-survol: #fff9ee; --or: #c8a254; --bord: rgba(180,145,78,.28);
+  --texte: #241d14; --texte-2: #685946; --texte-3: #93826c; --accent: #b68934;
+  --ligne: #b9944c; --union: #c79332; --homme: #4f7ea6; --femme: #c2627f; --danger: #b5483a;
+  --ombre: 0 10px 26px -6px rgba(58,42,18,.12), 0 2px 6px -1px rgba(58,42,18,.06);
+  --ombre-choix: 0 0 0 2.5px #c59638, 0 16px 34px -6px rgba(150,108,28,.28);
+  position: fixed; top: var(--header-height, 50px); left: 0; right: 0; bottom: 0; z-index: 1; overflow: hidden;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif; color: var(--texte); background: var(--fond);
+  transition: background-color .35s, color .35s;
+}
+#lignees.lg-emeraude {
+  --fond: #0d1d18; --grille: rgba(212,175,95,.08); --surface: rgba(16,36,30,.94);
+  --carte: #132b24; --carte-survol: #18362d; --or: #d4af5f; --bord: rgba(212,175,95,.25);
+  --texte: #f5efe2; --texte-2: #c5bca8; --texte-3: #8b9a92; --accent: #d4af5f;
+  --ligne: #9f8349; --union: #e2b857; --homme: #7fb0d6; --femme: #e59bb2; --danger: #ec8a7c;
+  --ombre: 0 12px 28px -6px rgba(0,0,0,.48), 0 2px 6px -1px rgba(0,0,0,.3);
+  --ombre-choix: 0 0 0 2.5px #e2b857, 0 16px 36px -6px rgba(226,184,87,.26);
+}
+#lignees * { box-sizing: border-box; }
+#lignees [hidden] { display: none !important; }
+#lignees button, #lignees input, #lignees select, #lignees textarea { font-family: inherit; color: inherit; min-height: 0; margin: 0; }
+#lignees button { cursor: pointer; }
+#lignees .lg-serif { font-family: "Cormorant Garamond", Georgia, serif; }
+
+/* Fond cartographique */
+#lg-arbre { position: absolute; inset: 0; background-color: var(--fond);
+  background-image: radial-gradient(circle at 50% 45%, transparent 0%, rgba(0,0,0,.04) 100%),
+    linear-gradient(to right, var(--grille) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grille) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px; }
+#lg-arbre.f3 { color: var(--texte); }
+#lg-arbre .link { stroke: var(--ligne) !important; stroke-width: 2px !important; stroke-linecap: round; transition: opacity .28s; }
+#lg-arbre .link.lg-estompe { opacity: .12; }
+#lg-arbre g.link-text text { fill: var(--union) !important; font-size: 21px !important; font-weight: 700; dominant-baseline: central;
+  paint-order: stroke; stroke: var(--fond); stroke-width: 6px; }
+#lg-arbre.lg-vide::after { content: attr(data-message); position: absolute; inset: 0; display: grid; place-items: center;
+  font: 600 22px "Cormorant Garamond", serif; color: var(--texte-2); }
+
+/* Cartes médaillons */
+#lignees .f3 div.card { background: transparent; }
+.lg-carte { position: relative; width: 210px; height: 112px; border-radius: 16px; background: var(--carte);
+  border: 1px solid var(--bord); box-shadow: var(--ombre); padding: 10px 12px; text-align: left;
+  display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; color: var(--texte);
+  transition: transform .22s cubic-bezier(.22,1,.36,1), box-shadow .22s, border-color .22s, opacity .28s, background-color .25s; }
+.lg-carte:hover { transform: translateY(-3px); background: var(--carte-survol); border-color: var(--or); }
+#lignees .card-main .lg-carte { border-color: var(--or); box-shadow: var(--ombre-choix); }
+.lg-carte.lg-estompee { opacity: .24; filter: grayscale(.55); }
+.lg-carte.lg-decede { background-image: linear-gradient(135deg, transparent 92%, rgba(120,110,95,.18) 92%); }
+.lg-haut { display: flex; gap: 10px; align-items: center; min-width: 0; }
+.lg-medaillon { flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; overflow: hidden;
+  font: 700 17px/1 "Cormorant Garamond", serif; color: var(--accent); background: rgba(198,150,56,.08); border: 2px solid var(--homme); }
+.lg-F .lg-medaillon, .lg-medaillon.lg-F { border-color: var(--femme); }
+.lg-medaillon img { width: 100%; height: 100%; object-fit: cover; }
+.lg-identite { min-width: 0; flex: 1; padding-right: 26px; }
+.lg-prenom { font: 700 19px/1.05 "Cormorant Garamond", serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lg-nom { font-size: 11px; color: var(--texte-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.lg-generation { position: absolute; top: 10px; right: 10px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 6px;
+  border: 1px solid var(--bord); color: var(--accent); font: 600 9.5px/18px "Plus Jakarta Sans", sans-serif; text-align: center; }
+.lg-bas { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid var(--bord); padding-top: 7px;
+  font-size: 10.5px; color: var(--texte-2); white-space: nowrap; }
+.lg-bas span:first-child { overflow: hidden; text-overflow: ellipsis; }
+
+/* Interface flottante */
+.lg-panneau { background: var(--surface); border: 1px solid var(--bord); backdrop-filter: blur(12px); box-shadow: 0 10px 25px -8px rgba(0,0,0,.15); }
+.lg-entete { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 30; display: flex; flex-wrap: wrap;
+  justify-content: space-between; gap: 8px; pointer-events: none; }
+.lg-entete > * { pointer-events: auto; }
+.lg-titre { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 18px; }
+.lg-logo { width: 36px; height: 36px; border-radius: 12px; border: 1px solid var(--or); color: var(--accent); display: grid; place-items: center; flex: none; }
+#lg-choix-arbre { font-size: 24px; font-weight: 700; border: none; background: transparent; padding: 0 4px 0 0; height: auto; max-width: 46vw; cursor: pointer; }
+#lg-choix-arbre option { font: 14px "Plus Jakarta Sans", sans-serif; color: #241d14; }
+.lg-stats { font-size: 11px; color: var(--texte-3); letter-spacing: .3px; }
+.lg-outils { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
+.lg-bouton { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.lg-bouton svg { color: var(--accent); }
+.lg-bouton.lg-plein { background: var(--accent); color: #fffdf8; border: none; box-shadow: 0 4px 12px -4px rgba(150,108,28,.5); }
+.lg-bouton.lg-plein svg { color: #fffdf8; }
+.lg-bouton.lg-actif { border-color: var(--or); color: var(--accent); }
+.lg-recherche { position: relative; }
+.lg-recherche label { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px; color: var(--accent); }
+#lg-recherche { border: none; background: transparent; outline: none; color: var(--texte); width: 190px; font-size: 13px; padding: 0; height: auto; box-shadow: none; }
+.lg-resultats { position: absolute; left: 0; right: 0; top: calc(100% + 6px); border-radius: 12px; border-color: var(--or);
+  max-height: 260px; overflow-y: auto; display: none; }
+.lg-resultats button, .lg-menu button { display: flex; justify-content: space-between; gap: 8px; width: 100%; text-align: left; padding: 8px 12px; border: none; background: none; font-size: 13px; border-radius: 0; }
+.lg-resultats button:hover, .lg-menu button:hover { background: rgba(198,150,56,.12); }
+.lg-resultats small { color: var(--texte-3); }
+.lg-menu-conteneur { position: relative; }
+.lg-menu { position: absolute; right: 0; top: calc(100% + 6px); width: 260px; border-radius: 16px; border-color: var(--or); padding: 6px; display: none; }
+.lg-menu button { border-radius: 10px; font-size: 12.5px; }
+.lg-pastille-theme { font-size: 10px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--or); color: var(--accent); }
+
+.lg-zoom { position: absolute; bottom: 16px; left: 16px; z-index: 30; display: flex; align-items: center; gap: 4px; padding: 6px; border-radius: 16px; }
+.lg-zoom button { width: 32px; height: 32px; border: none; background: none; border-radius: 10px; font-size: 16px; font-weight: 700; padding: 0; }
+.lg-zoom button:hover { background: rgba(198,150,56,.15); }
+.lg-zoom .lg-large { width: auto; padding: 0 10px; font-size: 12px; font-weight: 600; }
+.lg-niveau { min-width: 44px; text-align: center; font-size: 11px; font-weight: 600; color: var(--texte-2); }
+.lg-sep { width: 1px; height: 20px; background: var(--bord); margin: 0 2px; }
+
+/* Fiche latérale */
+.lg-fiche { position: absolute; top: 84px; bottom: 16px; right: 12px; width: 390px; max-width: calc(100% - 24px); z-index: 40;
+  border-radius: 24px; border-color: var(--or); display: flex; flex-direction: column;
+  transform: translateX(120%); transition: transform .3s cubic-bezier(.22,1,.36,1); }
+.lg-fiche.lg-ouvert { transform: none; }
+.lg-fiche-entete { display: flex; gap: 12px; align-items: center; padding: 16px; border-bottom: 1px solid var(--bord); }
+.lg-fiche-entete .lg-medaillon { width: 52px; height: 52px; font-size: 20px; }
+.lg-fiche-nom { min-width: 0; }
+.lg-fiche-entete h2 { margin: 3px 0 0; font-size: 22px; font-weight: 700; line-height: 1.15; }
+.lg-badge { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 2px 8px; border-radius: 999px;
+  background: rgba(198,150,56,.16); color: var(--accent); }
+.lg-fermer { margin-left: auto; width: 32px; height: 32px; border-radius: 50%; border: none; background: none; flex: none; }
+.lg-fermer:hover { background: rgba(198,150,56,.15); }
+.lg-onglets { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; padding: 8px; border-bottom: 1px solid var(--bord); }
+.lg-onglets button { padding: 7px; border: none; background: none; border-radius: 12px; font-size: 12px; font-weight: 600; color: var(--texte-2); }
+.lg-onglets button.lg-actif { background: var(--accent); color: #fffdf8; }
+.lg-contenu { flex: 1; overflow-y: auto; padding: 16px; }
+.lg-champs { display: grid; gap: 10px; }
+.lg-ligne2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.lg-champs label { display: block; font-size: 11px; font-weight: 600; color: var(--texte-2); margin-bottom: 4px; }
+#lignees .lg-champs input, #lignees .lg-champs select, #lignees .lg-champs textarea { width: 100%; padding: 7px 10px; border-radius: 12px; border: 1px solid var(--bord);
+  background: transparent; color: var(--texte); font-size: 12.5px; outline: none; height: auto; box-shadow: none; }
+#lignees .lg-champs select { background: var(--carte); }
+#lignees .lg-champs input:focus, #lignees .lg-champs textarea:focus { border-color: var(--or); }
+#lignees .lg-champs textarea { min-height: 80px; resize: vertical; }
+.lg-enregistrer { width: 100%; padding: 10px; border: none; border-radius: 14px; background: var(--accent); color: #fffdf8 !important; font-weight: 600; }
+.lg-groupe-liens h3 { margin: 14px 0 6px; font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--texte-3); }
+.lg-groupe-liens h3:first-child { margin-top: 0; }
+.lg-lien-personne { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 8px; border: 1px solid transparent; border-radius: 12px; background: none; text-align: left; }
+.lg-lien-personne:hover { border-color: var(--bord); background: rgba(198,150,56,.08); }
+.lg-lien-personne .lg-medaillon { width: 32px; height: 32px; font-size: 13px; }
+.lg-lien-personne small { display: block; color: var(--texte-3); font-size: 11px; }
+.lg-vide-liste { color: var(--texte-3); font-size: 12px; font-style: italic; margin: 0; }
+.lg-actions { display: grid; gap: 8px; }
+.lg-actions button, .lg-bouton-fichier { padding: 10px 12px; border-radius: 14px; border: 1px solid var(--bord); background: none; text-align: left; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.lg-actions button:hover, .lg-bouton-fichier:hover { border-color: var(--or); color: var(--accent); }
+#lignees .lg-actions .lg-danger { color: var(--danger); }
+.lg-lecture-seule .lg-actions button:not([data-action="centrer"]), .lg-lecture-seule .lg-bouton-fichier, .lg-lecture-seule .lg-enregistrer, .lg-lecture-seule #lg-nouveau { display: none; }
+
+#lg-dialogue { border-radius: 20px; border-color: var(--or); width: min(440px, 92vw); padding: 20px; color: var(--texte); }
+#lg-dialogue::backdrop { background: rgba(20,15,8,.35); backdrop-filter: blur(2px); }
+#lg-dialogue h3 { margin: 0 0 4px; font-size: 24px; }
+.lg-dialogue-boutons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.lg-dialogue-boutons button:first-child { border: 1px solid var(--bord); background: none; border-radius: 14px; }
+
+.lg-toast { position: absolute; bottom: 20px; left: 50%; transform: translate(-50%, 20px); opacity: 0; z-index: 60; padding: 10px 16px;
+  border-radius: 14px; font-size: 13px; transition: .25s; pointer-events: none; }
+.lg-toast.lg-visible { transform: translate(-50%, 0); opacity: 1; }
+
+@media (max-width: 760px) {
+  #lg-choix-arbre { font-size: 19px; } #lg-recherche { width: 110px; } .lg-bouton .lg-texte { display: none; }
+  .lg-fiche { top: auto; height: 72%; width: auto; left: 12px; }
+}

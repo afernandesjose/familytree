@@ -1,5 +1,5 @@
 OC.L10N.register(
-  "hc_familytree",
+  "lignees",
   {
   " Check the new tree before retrying; the app does not delete it automatically.": " Pred opakovaním skontrolujte nový rodokmeň; aplikácia ho automaticky neodstráni.",
   " cannot be started": " sa nedá spustiť",

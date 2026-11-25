@@ -4,9 +4,9 @@ declare(strict_types=1);
  * @file Registrace dashboardového widgetu FamilyTree pro Nextcloud 35.
  * Maďarská notace: s = string, n = int, b = bool, a = array, o = objekt/mixed.
  */
-namespace OCA\HcFamilyTree\Dashboard;
+namespace OCA\Lignees\Dashboard;
 
-use OCA\HcFamilyTree\AppInfo\Application;
+use OCA\Lignees\AppInfo\Application;
 use OCP\Dashboard\IIconWidget;
 use OCP\Dashboard\IWidget;
 use OCP\IL10N;
@@ -49,7 +49,7 @@ final class FamilyTreeWidget implements IWidget, IIconWidget {
 
     /** @brief Vrátí odkaz na hlavní stránku aplikace. @return ?string */
     public function getUrl(): ?string {
-        return $this->oUrl->linkToRoute('hc_familytree.page.index');
+        return $this->oUrl->linkToRoute('lignees.page.index');
     }
 
     /**

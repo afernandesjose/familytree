@@ -6,7 +6,7 @@ declare(strict_types=1);
  * Externí klíče GEDCOM/JSON a veřejná rozhraní se nepřejmenovávají.
  * Import je doplňovací: nikdy nemaže ani neoznačuje nezmíněné osoby jako nepřítomné.
  */
-namespace OCA\HcFamilyTree\Service;
+namespace OCA\Lignees\Service;
 
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;

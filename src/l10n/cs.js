@@ -1,5 +1,5 @@
 OC.L10N.register(
-  "hc_familytree",
+  "lignees",
   {
   " Check the new tree before retrying; the app does not delete it automatically.": " Zkontrolujte vytvořený rodokmen před opakováním; aplikace nic automaticky nemaže.",
   " cannot be started": " nelze spustit",
@@ -269,7 +269,7 @@ OC.L10N.register(
   "Family tree tools": "Nástroje rodokmenu",
   "Family tree: %s": "Rodokmen: %s",
   "FamilyTree": "Rodokmen",
-  "FamilyTree application root was not found.": "Kořen aplikace hc_familytree nebyl nalezen.",
+  "FamilyTree application root was not found.": "Kořen aplikace lignees nebyl nalezen.",
   "Field": "Údaj",
   "File": "Soubor",
   "File cannot be read.": "Soubor nelze přečíst.",

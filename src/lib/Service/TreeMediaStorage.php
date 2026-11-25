@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Maďarská notace: s = string, n = int, a = array, o = objekt, b = bool.
  * Předání nikdy nemaže původní soubory a nevyvolává Files Versions cizího účtu.
  */
-namespace OCA\HcFamilyTree\Service;
+namespace OCA\Lignees\Service;
 
 use OCP\Files\File;
 use OCP\Files\Folder;
