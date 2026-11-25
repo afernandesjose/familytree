@@ -36,6 +36,7 @@ Util::addScript('lignees', 'lignees');
         <button class="lg-bouton lg-panneau" id="lg-outils" title="Options">⋮</button>
         <div class="lg-menu lg-panneau" id="lg-menu">
           <button id="lg-theme"><span>Changer de thème</span><span class="lg-pastille-theme" id="lg-nom-theme">Parchemin</span></button>
+          <button id="lg-import-ged"><span>Importer un fichier GEDCOM</span></button>
           <button id="lg-export-ged"><span>Exporter en GEDCOM</span></button>
           <button id="lg-moi"><span>Revenir à la personne de départ</span></button>
         </div>
@@ -87,6 +88,18 @@ Util::addScript('lignees', 'lignees');
       <div class="lg-ligne2"><div><label>Genre</label><select name="gender"><option value="male">Homme</option><option value="female">Femme</option><option value="">Non précisé</option></select></div>
         <div><label>Naissance</label><input name="birth_date" type="date"></div></div>
       <div class="lg-dialogue-boutons"><button value="annuler" formnovalidate>Annuler</button><button value="ok" class="lg-enregistrer">Ajouter</button></div>
+    </form>
+  </dialog>
+  <dialog id="lg-import" class="lg-panneau">
+    <form method="dialog" class="lg-champs" id="lg-form-import">
+      <h3 class="lg-serif">Importer un fichier GEDCOM</h3>
+      <div><label>Fichier (.ged, .gedcom ou .gdz)</label><input type="file" name="fichier" accept=".ged,.gedcom,.gdz,.zip" required></div>
+      <div><label>Destination</label>
+        <select name="mode"><option value="new">Créer un nouvel arbre</option><option value="update">Mettre à jour l'arbre affiché</option></select></div>
+      <div id="lg-import-nom"><label>Nom du nouvel arbre</label><input name="nom" placeholder="ex. Famille Fernandes José"></div>
+      <p class="lg-aide" id="lg-import-aide">Un nouvel arbre est créé à partir du fichier ; l'arbre actuel n'est pas modifié.</p>
+      <div class="lg-apercu" id="lg-import-apercu" hidden></div>
+      <div class="lg-dialogue-boutons"><button value="annuler" formnovalidate>Annuler</button><button type="button" class="lg-enregistrer" id="lg-import-action">Voir l'aperçu</button></div>
     </form>
   </dialog>
   <div class="lg-toast lg-panneau" id="lg-toast"></div>

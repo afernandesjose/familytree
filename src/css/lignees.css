@@ -31,7 +31,7 @@
 #lignees button, #lignees .lg-bouton-fichier { background: none; border: 1px solid transparent; box-shadow: none; padding: 0; min-height: 0; min-width: 0; height: auto; width: auto; font-size: inherit; font-weight: inherit; line-height: normal; border-radius: 0; color: inherit; }
 #lignees button:hover:not(:disabled), #lignees button:focus { background-color: transparent; }
 #lignees input, #lignees select, #lignees textarea { margin: 0; min-height: 0; }
-#lignees dialog#lg-dialogue:not([open]) { display: none !important; }
+#lignees dialog:not([open]) { display: none !important; }
 
 #lignees [hidden] { display: none !important; }
 #lignees button, #lignees input, #lignees select, #lignees textarea { font-family: inherit; color: inherit; min-height: 0; margin: 0; }
@@ -151,10 +151,15 @@
 #lignees .lg-actions .lg-danger { color: var(--danger); }
 #lignees .lg-lecture-seule .lg-actions button:not([data-action="centrer"]), #lignees .lg-lecture-seule .lg-bouton-fichier, #lignees .lg-lecture-seule .lg-enregistrer, #lignees .lg-lecture-seule #lg-nouveau { display: none; }
 
-#lignees #lg-dialogue[open] { position: fixed; inset: 0; margin: auto; height: fit-content; max-height: 90vh; overflow: auto; }
-#lignees #lg-dialogue { border-radius: 20px; border-color: var(--or); width: min(440px, 92vw); padding: 20px; color: var(--texte); }
-#lignees #lg-dialogue::backdrop { background: rgba(20,15,8,.35); backdrop-filter: blur(2px); }
-#lignees #lg-dialogue h3 { margin: 0 0 4px; font-size: 24px; }
+#lignees #lg-dialogue[open], #lignees #lg-import[open] { position: fixed; inset: 0; margin: auto; height: fit-content; max-height: 90vh; overflow: auto; }
+#lignees #lg-dialogue, #lignees #lg-import { border-radius: 20px; border-color: var(--or); width: min(440px, 92vw); padding: 20px; color: var(--texte); }
+#lignees #lg-dialogue::backdrop, #lignees #lg-import::backdrop { background: rgba(20,15,8,.35); backdrop-filter: blur(2px); }
+#lignees #lg-dialogue h3, #lignees #lg-import h3 { margin: 0 0 4px; font-size: 24px; color: var(--texte); }
+#lignees .lg-aide { margin: 0; font-size: 12px; color: var(--texte-3); line-height: 1.45; }
+#lignees .lg-apercu { border: 1px solid var(--bord); border-radius: 14px; padding: 10px 12px; font-size: 12.5px; line-height: 1.6; background: rgba(198,150,56,.07); }
+#lignees .lg-apercu strong { color: var(--accent); }
+#lignees .lg-apercu.lg-erreur { border-color: var(--danger); color: var(--danger); background: none; }
+#lignees .lg-enregistrer:disabled { opacity: .55; cursor: wait; }
 #lignees .lg-dialogue-boutons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
 #lignees .lg-dialogue-boutons button:first-child { border: 1px solid var(--bord); background: none; border-radius: 14px; }
 
