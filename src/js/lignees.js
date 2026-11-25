@@ -126,7 +126,16 @@
     if (!donnees.length) { $('#lg-stats').textContent = 'Arbre vide'; return; }
     const ans = donnees.map(d => annee(d.data.birthday)).filter(Boolean).sort();
     const gens = Math.max(...donnees.map(d => d.data._generation));
-    $('#lg-stats').textContent = `${donnees.length} membres • ${gens} générations${ans.length ? ' • Origine ' + ans[0] : ''}${peutModifier ? '' : ' • lecture seule'}`;
+    const centre = graphique && parId(graphique.store.getMainId());
+    $('#lg-stats').textContent = `${donnees.length} membres • ${gens} générations${ans.length ? ' • Origine ' + ans[0] : ''}${peutModifier ? '' : ' • lecture seule'}`
+      + (centre ? ` • Centré sur ${centre.data['first name']}` : '');
+  }
+  // Personne qui correspond au compte connecté (même prénom, une seule correspondance), sinon la personne de départ de l'arbre.
+  function personneMoi() {
+    const prenom = (OC.getCurrentUser?.().displayName || '').trim().split(/\s+/)[0].toLowerCase();
+    const trouves = prenom ? donnees.filter(d => (d.data['first name'] || '').trim().split(/\s+/)[0].toLowerCase() === prenom) : [];
+    if (trouves.length === 1) return trouves[0].id;
+    return parId(personneDepart) ? String(personneDepart) : donnees[0]?.id;
   }
   function mettreAJourZoom() {
     if (graphique) $('#lg-niveau').textContent = Math.round(d3.zoomTransform(graphique.svg).k * 100) + ' %';
@@ -154,20 +163,21 @@
       .setSingleParentEmptyCard(false).setShowSiblingsOfMain(true)
       .setSortChildrenFunction((a, b) => (a.data.birthday || '9999').localeCompare(b.data.birthday || '9999'))
       .setLinkSpouseText(() => '⚭')
-      .setAfterUpdate(() => { estomperLiens(); mettreAJourZoom(); });
+      .setAfterUpdate(() => { estomperLiens(); mettreAJourZoom(); mettreAJourStats(); });
     graphique.setCardHtml().setCardDim({ w: 210, h: 112 }).setMiniTree(false)
       .setCardInnerHtmlCreator(carte)
       .setOnCardClick((e, d) => { centrer(d.data.id); ouvrirFiche(d.data.id); });
-    const depart = parId(idCentre) ? String(idCentre) : (parId(personneDepart) ? String(personneDepart) : donnees[0].id);
+    const depart = parId(idCentre) ? String(idCentre) : personneMoi();
     // Sur petit écran, on garde le zoom à 100 % centré sur la personne plutôt que d'afficher tout l'arbre en miniature.
     graphique.updateMainId(depart).updateTree(window.innerWidth < 760 ? { initial: false, tree_position: 'main_to_middle', scale: 1, transition_time: 0 } : { initial: true });
-    d3.select(graphique.svg).on('wheel.lignees', () => setTimeout(mettreAJourZoom, 60));
+    // Le niveau de zoom affiché suit la molette, le pincement à deux doigts et le glisser.
+    for (const evt of ['wheel', 'touchend', 'mouseup']) graphique.svg.addEventListener(evt, () => setTimeout(mettreAJourZoom, 80), { passive: true });
     mettreAJourStats();
   }
   function centrer(id) {
     if (!graphique) return;
     graphique.updateMainId(String(id)); graphique.updateTree({ tree_position: 'main_to_middle' });
-    retenir('centre-' + arbre.id, String(id));
+    mettreAJourStats();
   }
 
   async function chargerArbre(id, idCentre) {
@@ -177,7 +187,7 @@
     racine().classList.toggle('lg-lecture-seule', !peutModifier);
     personneDepart = r.tree.root_person_id;
     construireDonnees();
-    dessiner(idCentre ?? preferences()['centre-' + id]);
+    dessiner(idCentre);
     retenir('arbre', id);
   }
   // Recharge les données après une modification sans perdre la personne au centre.
@@ -384,7 +394,8 @@
       $('#lg-nom-theme').textContent = em ? 'Émeraude' : 'Parchemin'; retenir('theme', em ? 'emeraude' : 'parchemin');
     };
     $('#lg-export-ged').onclick = () => { if (arbre) window.location.href = OC.generateUrl(`/apps/lignees/api/trees/${arbre.id}/export/gedcom`); };
-    $('#lg-moi').onclick = () => { if (personneDepart) centrer(personneDepart); };
+    $('#lg-moi').onclick = () => { const moi = personneMoi(); if (moi) centrer(moi); };
+    $('#lg-maison').onclick = () => { const moi = personneMoi(); if (moi) centrer(moi); };
     $('#lg-import-ged').onclick = () => {
       const f = $('#lg-form-import'); f.reset();
       if (!peutModifier) f.mode.value = 'new';

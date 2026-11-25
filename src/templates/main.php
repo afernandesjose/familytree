@@ -28,6 +28,8 @@ Util::addScript('lignees', 'lignees');
           <input id="lg-recherche" type="search" placeholder="Rechercher un membre…" autocomplete="off"></label>
         <div class="lg-resultats lg-panneau" id="lg-resultats"></div>
       </div>
+      <button class="lg-bouton lg-panneau" id="lg-maison" title="Revenir à moi">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></button>
       <button class="lg-bouton lg-panneau" id="lg-focus" title="Mettre en valeur la lignée directe de la personne au centre">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83"/></svg>
         <span class="lg-texte">Focus lignée</span></button>
@@ -38,7 +40,7 @@ Util::addScript('lignees', 'lignees');
           <button id="lg-theme"><span>Changer de thème</span><span class="lg-pastille-theme" id="lg-nom-theme">Parchemin</span></button>
           <button id="lg-import-ged"><span>Importer un fichier GEDCOM</span></button>
           <button id="lg-export-ged"><span>Exporter en GEDCOM</span></button>
-          <button id="lg-moi"><span>Revenir à la personne de départ</span></button>
+          <button id="lg-moi"><span>Revenir à moi</span></button>
         </div>
       </div>
     </div>
