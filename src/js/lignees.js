@@ -53,7 +53,7 @@
   // Lignées : la vue famille n'affiche qu'une lignée à la fois (avec les conjoints venus d'ailleurs), ou toutes.
   let complet = null, ligneesNommees = [], ligneeAffichee = null;
   // Ponts vers d'autres arbres : id de personne → [{id, cible: {id, tree_id, tree_name, ...}, canDelete}]
-  let ponts = new Map(), partages = [], estProprietaire = false;
+  let ponts = new Map(), partages = [], estProprietaire = false, evenements = [];
   const parId = id => donnees.find(d => d.id === String(id));
   const personne = id => personnes.find(p => String(p.id) === String(id));
 
@@ -166,7 +166,7 @@
     const dates = ne && mort ? `${ne} – ${mort}` : ne ? `Né${p.gender === 'F' ? 'e' : ''} en ${ne}` : 'Dates inconnues';
     const estompee = focus && idCentre() && !lignee(idCentre()).has(d.data.id);
     return `<div class="lg-carte lg-${p.gender}${estompee ? ' lg-estompee' : ''}${mort || !p.vivant ? ' lg-decede' : ''}">
-      <span class="lg-generation">${romain(p._generation)}</span>${ponts.has(d.data.id) ? `<span class="lg-pont-carte" title="Aussi dans l'arbre « ${echapper(ponts.get(d.data.id)[0].cible.tree_name)} »">🔗</span>` : ''}
+      <span class="lg-generation">${romain(p._generation)}</span>${ponts.has(d.data.id) ? `<span class="lg-pont-carte" title="Aussi dans : ${ponts.get(d.data.id).map(x => '« ' + echapper(x.cible.tree_name) + ' »').join(', ')}">🔗</span>` : ''}
       <div class="lg-haut"><div class="lg-medaillon">${medaillon(p)}</div>
         <div class="lg-identite"><div class="lg-prenom">${echapper(p['first name'])}</div><div class="lg-nom">${echapper(p['last name'])}</div></div></div>
       <div class="lg-bas"><span>${echapper(p.occupation || (p.place || '').split(',')[0])}</span><span>${dates}</span></div>
@@ -315,7 +315,7 @@
     const r = await api('GET', `/trees/${id}`);
     if (arbre?.id !== r.tree.id) ligneeAffichee = null;
     arbre = r.tree; personnes = r.people || []; liens = r.relationships || [];
-    partages = r.shares || []; estProprietaire = !!r.isOwner;
+    partages = r.shares || []; estProprietaire = !!r.isOwner; evenements = r.events || [];
     ponts = new Map();
     try {
       for (const pt of await api('GET', `/trees/${id}/passerelles`)) {
@@ -350,8 +350,12 @@
     m.innerHTML = medaillon(p); m.className = 'lg-medaillon lg-' + p.gender;
     $('#lg-fiche-generation').textContent = 'Génération ' + romain(p._generation);
     $('#lg-fiche-nom').textContent = `${p['first name']} ${p['last name'] || ''}`.trim();
-    const pont = (ponts.get(String(id)) || [])[0];
+    // Avec plusieurs ponts, le bouton suit le plus récent ; l'onglet Liens les liste tous.
+    const pont = (ponts.get(String(id)) || []).reduce((r, x) => (!r || Number(x.id) > Number(r.id) ? x : r), null);
     const autre = !pont && mode === 'famille' && ligneeAffichee !== 'toutes' ? ligneesNommees.find(l => l.cle === complet?.cleDe.get(String(id)) && l.cle !== ligneeAffichee) : null;
+    const ligneeRacine = ligneesNommees.length >= 2 ? ligneesNommees.find(l => l.racine.includes(String(id))) : null;
+    $('#lg-action-deplacer').hidden = !peutModifier || !ligneeRacine;
+    if (ligneeRacine) $('#lg-action-deplacer').textContent = `Déplacer la lignée ${ligneeRacine.nom} dans un nouvel arbre`;
     const bv = $('#lg-voir-lignee');
     bv.hidden = !pont && !autre;
     delete bv.dataset.cle; delete bv.dataset.arbre; delete bv.dataset.personne;
@@ -588,6 +592,75 @@
     dlg.showModal();
   }
 
+  // ---- Déplacer une lignée dans un nouvel arbre (proposé sur la première génération d'une lignée)
+  // Les personnes de la lignée liées à quelqu'un qui reste (un conjoint, par exemple) restent aussi dans cet arbre,
+  // reliées par un pont à leur copie. Les suppressions viennent en dernier : un échec avant laisse l'arbre intact.
+  function planDeplacement(lignee) {
+    const membres = new Set(lignee.membres);
+    const restent = new Set(donnees.map(d => d.id).filter(i => !membres.has(i)));
+    const liesAuReste = new Set();
+    for (const l of liens) {
+      const a = String(l.person1_id), b = String(l.person2_id);
+      if (membres.has(a) && restent.has(b)) liesAuReste.add(a);
+      if (membres.has(b) && restent.has(a)) liesAuReste.add(b);
+    }
+    return { membres: [...membres], ponts: [...liesAuReste], retires: [...membres].filter(i => !liesAuReste.has(i)) };
+  }
+  async function deplacerLignee() {
+    const lignee = ligneesNommees.find(l => l.racine.includes(String(choisi)));
+    if (!peutModifier || !lignee) return;
+    const plan = planDeplacement(lignee), nom = i => `${parId(i).data['first name']} ${parId(i).data['last name'] || ''}`.trim();
+    const dlg = $('#lg-deplacer'), f = $('#lg-form-deplacer'), bouton = $('#lg-deplacer-action'), zone = $('#lg-deplacer-apercu');
+    f.reset(); f.nom.value = `Famille ${lignee.nom}`; zone.classList.remove('lg-erreur');
+    $('#lg-deplacer-titre').textContent = `Déplacer la lignée ${lignee.nom}`;
+    const groupes = await mesGroupes(), dejaPartage = new Set(partages.filter(x => x.share_type === 'group').map(x => x.share_with));
+    $('#lg-deplacer-groupes').innerHTML = groupes.map(g => `<label><input type="checkbox" name="groupe" value="${echapper(g)}" ${dejaPartage.has(g) || (!dejaPartage.size && g === 'famille') ? 'checked' : ''}> ${echapper(g)}</label>`).join('')
+      || '<span class="lg-aide">Aucun groupe : le nouvel arbre restera privé.</span>';
+    const nbEv = evenements.filter(e => plan.membres.includes(String(e.person_id))).length;
+    zone.innerHTML = `<strong>${plan.membres.length}</strong> personnes copiées dans le nouvel arbre, avec leurs liens${nbEv ? ` et ${nbEv} événements` : ''} : ${plan.membres.map(i => echapper(nom(i))).join(', ')}.<br>`
+      + (plan.ponts.length ? `<strong>Restent aussi ici</strong>, reliées par un pont : ${plan.ponts.map(i => echapper(nom(i))).join(', ')}.<br>` : '')
+      + `<strong>Retirées de « ${echapper(arbre.name)} »</strong> : ${plan.retires.map(i => echapper(nom(i))).join(', ') || 'personne'}.`
+      + (plan.membres.some(i => personne(i)?.photo_url) ? '<br><small>Les photos ne sont pas copiées.</small>' : '');
+    bouton.disabled = false; bouton.textContent = 'Déplacer';
+    bouton.onclick = async () => {
+      if (!f.nom.value.trim()) { f.nom.reportValidity(); return; }
+      bouton.disabled = true; bouton.textContent = 'Déplacement…';
+      let cree = null;
+      try {
+        cree = await api('POST', '/trees', { name: f.nom.value.trim() });
+        for (const c of f.querySelectorAll('input[name="groupe"]:checked'))
+          await api('POST', `/trees/${cree.id}/shares`, { share_type: 'group', share_with: c.value, permission: 'edit' });
+        const nouveaux = new Map();
+        for (const i of plan.membres) {
+          const brut = personne(i), corps = corpsPersonne(brut, { photo_url: '' });
+          for (const k of ['birth_date', 'death_date']) corps[k] = versIso(brut[k]) || brut[k] || '';
+          nouveaux.set(i, (await api('POST', `/trees/${cree.id}/people`, corps)).id);
+        }
+        for (const l of liens) {
+          const a = nouveaux.get(String(l.person1_id)), b = nouveaux.get(String(l.person2_id));
+          if (a && b) await api('POST', `/trees/${cree.id}/relationships`, { type: l.type, person1_id: a, person2_id: b });
+        }
+        for (const e of evenements) {
+          const n = nouveaux.get(String(e.person_id));
+          if (n) await api('POST', `/people/${n}/events`, { type: e.type, title: e.title, event_date: e.event_date, place: e.place, description: e.description });
+        }
+        for (const i of plan.ponts) await api('POST', `/people/${i}/passerelles`, { cible_id: nouveaux.get(i) });
+      } catch (err) {
+        if (cree) await api('DELETE', `/trees/${cree.id}`).catch(() => {});
+        zone.classList.add('lg-erreur'); zone.textContent = 'Déplacement annulé, rien n\'a été modifié : ' + (err.message || err);
+        bouton.disabled = false; bouton.textContent = 'Réessayer';
+        return;
+      }
+      const echecs = [];
+      for (const i of plan.retires) { try { await api('DELETE', `/people/${i}`); } catch (err) { echecs.push(nom(i)); } }
+      dlg.close(); fermerFiche();
+      arbres = await api('GET', '/trees'); remplirChoix(arbre.id);
+      ligneeAffichee = null; await chargerArbre(arbre.id);
+      toast(echecs.length ? `Lignée copiée, mais non retirées d'ici : ${echecs.join(', ')}` : `Lignée ${lignee.nom} déplacée dans « ${cree.name} »`);
+    };
+    dlg.showModal();
+  }
+
   // ---- Import GEDCOM : aperçu obligatoire, puis import confirmé par l'empreinte du fichier
   let apercuImport = null;
   function reinitialiserImport() {
@@ -745,6 +818,7 @@
       else if (a === 'supprimer') supprimer();
       else if (a === 'relier') relier();
       else if (a === 'pont') pont();
+      else if (a === 'deplacer') deplacerLignee();
       else ajouter(a);
     };
     $('#lg-photo').onchange = e => { envoyerPhoto(e.target.files[0]); e.target.value = ''; };

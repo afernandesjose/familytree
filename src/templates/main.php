@@ -87,6 +87,7 @@ Util::addScript('lignees', 'lignees');
         <button data-action="enfant">Ajouter un enfant</button>
         <button data-action="relier">Relier à une personne existante</button>
         <button data-action="pont">Relier à la même personne dans un autre arbre</button>
+        <button data-action="deplacer" id="lg-action-deplacer" hidden>Déplacer cette lignée dans un nouvel arbre</button>
         <label class="lg-bouton-fichier">Changer la photo<input type="file" accept="image/*" id="lg-photo" hidden></label>
         <button data-action="supprimer" class="lg-danger">Supprimer cette personne</button>
       </div>
@@ -137,6 +138,15 @@ Util::addScript('lignees', 'lignees');
       <div><label>La même personne dans cet arbre</label><select name="personne" required></select></div>
       <p class="lg-aide">Les deux fiches restent séparées ; le pont permet de passer d'un arbre à l'autre (« Voir sa lignée »).</p>
       <div class="lg-dialogue-boutons"><button value="annuler" formnovalidate>Annuler</button><button value="ok" class="lg-enregistrer">Relier</button></div>
+    </form>
+  </dialog>
+  <dialog id="lg-deplacer" class="lg-panneau">
+    <form method="dialog" class="lg-champs" id="lg-form-deplacer">
+      <h3 class="lg-serif" id="lg-deplacer-titre">Déplacer la lignée</h3>
+      <div><label>Nom du nouvel arbre</label><input name="nom" required></div>
+      <div><label>Partager en modification avec</label><div class="lg-cases" id="lg-deplacer-groupes"></div></div>
+      <div class="lg-apercu" id="lg-deplacer-apercu"></div>
+      <div class="lg-dialogue-boutons"><button value="annuler" formnovalidate>Annuler</button><button type="button" class="lg-enregistrer" id="lg-deplacer-action">Déplacer</button></div>
     </form>
   </dialog>
   <dialog id="lg-import" class="lg-panneau">
