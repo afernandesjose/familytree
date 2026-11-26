@@ -34,6 +34,9 @@
 #lignees dialog:not([open]) { display: none !important; }
 
 #lignees [hidden] { display: none !important; }
+/* La zone de l'application ne défile jamais (sinon le navigateur la décale pour montrer un champ caché) */
+#lignees, #lignees #lg-arbre { overflow: hidden; overflow: clip; }
+#lignees h1, #lignees h2, #lignees h3 { color: var(--texte); }
 #lignees button, #lignees input, #lignees select, #lignees textarea { font-family: inherit; color: inherit; min-height: 0; margin: 0; }
 #lignees button { cursor: pointer; }
 #lignees .lg-serif { font-family: "Cormorant Garamond", Georgia, serif; }
@@ -44,6 +47,16 @@
     linear-gradient(to right, var(--grille) 1px, transparent 1px),
     linear-gradient(to bottom, var(--grille) 1px, transparent 1px);
   background-size: 100% 100%, 40px 40px, 40px 40px; }
+#lignees #lg-arbre.lg-mode-famille { cursor: grab; touch-action: none; overflow: hidden; }
+#lignees #lg-arbre.lg-mode-famille:active { cursor: grabbing; }
+#lignees .lg-monde { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
+#lignees .lg-liens { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+#lignees .lg-liens .lg-lien { fill: none; stroke: var(--ligne); stroke-width: 2px; stroke-linecap: round; stroke-linejoin: round; }
+#lignees .lg-liens .lg-anneaux circle { fill: var(--fond); stroke: var(--union); stroke-width: 1.8px; }
+#lignees .lg-liens g { transition: opacity .28s; }
+#lignees .lg-liens g.lg-estompe { opacity: .12; }
+#lignees .lg-place { position: absolute; width: 210px; height: 112px; }
+#lignees .lg-place.card-main .lg-carte { border-color: var(--or); box-shadow: var(--ombre-choix); }
 #lignees #lg-arbre.f3 { color: var(--texte); }
 #lignees #lg-arbre .link { stroke: var(--ligne) !important; stroke-width: 2px !important; stroke-linecap: round; transition: opacity .28s; }
 #lignees #lg-arbre .link.lg-estompe { opacity: .12; }
@@ -168,6 +181,6 @@
 #lignees .lg-toast.lg-visible { transform: translate(-50%, 0); opacity: 1; }
 
 @media (max-width: 760px) {
-  #lignees #lg-choix-arbre { font-size: 19px; } #lignees #lg-recherche { width: 110px; } #lignees .lg-bouton .lg-texte { display: none; }
+  #lignees #lg-choix-arbre { font-size: 19px; } #lignees #lg-recherche { width: 84px; } #lignees .lg-outils { gap: 6px; } #lignees .lg-bouton { padding: 8px 10px; } #lignees .lg-bouton .lg-texte { display: none; }
   #lignees .lg-fiche { top: auto; height: 72%; width: auto; left: 12px; }
 }

@@ -9,6 +9,7 @@ Util::addStyle('lignees', 'family-chart');
 Util::addStyle('lignees', 'lignees');
 Util::addScript('lignees', 'vendor/d3.min');
 Util::addScript('lignees', 'vendor/family-chart.min');
+Util::addScript('lignees', 'vue-complete');
 Util::addScript('lignees', 'lignees');
 ?>
 <div id="lignees" data-version="<?php p($_['appVersion']); ?>">
@@ -30,6 +31,9 @@ Util::addScript('lignees', 'lignees');
       </div>
       <button class="lg-bouton lg-panneau" id="lg-maison" title="Revenir à moi">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></button>
+      <button class="lg-bouton lg-panneau" id="lg-vue" title="Changer de vue">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="5" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="8.5" y="16" width="7" height="5" rx="1"/><path d="M6.5 8v4h11V8M12 12v4"/></svg>
+        <span class="lg-texte">Vue centrée</span></button>
       <button class="lg-bouton lg-panneau" id="lg-focus" title="Mettre en valeur la lignée directe de la personne au centre">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83"/></svg>
         <span class="lg-texte">Focus lignée</span></button>

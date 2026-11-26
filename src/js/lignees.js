@@ -47,6 +47,9 @@
   // ---- État
   let arbres = [], arbre = null, personnes = [], liens = [], donnees = [], graphique = null;
   let peutModifier = false, focus = false, choisi = null, personneDepart = null;
+  // Deux vues : « famille » (tout l'arbre, placement maison) et « centree » (family-chart autour d'une personne).
+  let mode = preferences().vue === 'centree' ? 'centree' : 'famille';
+  let disposition = null, famille = null; // famille = { conteneur, monde, zoom, selection }
   const parId = id => donnees.find(d => d.id === String(id));
   const personne = id => personnes.find(p => String(p.id) === String(id));
 
@@ -82,23 +85,19 @@
       }
     }
     donnees = [...map.values()];
-    calculerGenerations();
+    calculerDisposition();
   }
 
-  // Génération : conjoints alignés, chaque enfant une génération sous ses parents.
-  function calculerGenerations() {
-    const g = new Map(donnees.map(d => [d.id, 0]));
-    for (let tour = 0, change = true; change && tour < 60; tour++) {
-      change = false;
-      for (const d of donnees) {
-        let v = g.get(d.id);
-        for (const p of d.rels.parents) v = Math.max(v, g.get(p) + 1);
-        for (const s of d.rels.spouses) v = Math.max(v, g.get(s));
-        if (v !== g.get(d.id)) { g.set(d.id, v); change = true; }
-      }
-    }
-    donnees.forEach(d => { d.data._generation = g.get(d.id) + 1; });
+  // Placement « toute la famille » (js/vue-complete.js) ; il fournit aussi les générations des deux vues.
+  function calculerDisposition() {
+    disposition = donnees.length ? LigneesVueComplete.calculer(
+      donnees.map(d => ({ id: d.id, naissance: d.data.birthday, genre: d.data.gender })),
+      liens.map(l => ({ type: l.type, de: l.person1_id, vers: l.person2_id })),
+      { reference: personneMoi() }) : null;
+    donnees.forEach(d => { d.data._generation = disposition?.cartes.get(d.id)?.gen || 1; });
   }
+  // Personne au centre (vue centrée) ou sélectionnée (vue famille).
+  function idCentre() { return mode === 'centree' ? graphique?.store.getMainId() : famille?.selection; }
 
   function lignee(id) {
     const vus = new Set([id]);
@@ -113,7 +112,7 @@
   function carte(d) {
     const p = d.data.data, ne = annee(p.birthday), mort = annee(p.death);
     const dates = ne && mort ? `${ne} – ${mort}` : ne ? `Né${p.gender === 'F' ? 'e' : ''} en ${ne}` : 'Dates inconnues';
-    const estompee = focus && graphique && !lignee(graphique.store.getMainId()).has(d.data.id);
+    const estompee = focus && idCentre() && !lignee(idCentre()).has(d.data.id);
     return `<div class="lg-carte lg-${p.gender}${estompee ? ' lg-estompee' : ''}${mort || !p.vivant ? ' lg-decede' : ''}">
       <span class="lg-generation">${romain(p._generation)}</span>
       <div class="lg-haut"><div class="lg-medaillon">${medaillon(p)}</div>
@@ -126,9 +125,9 @@
     if (!donnees.length) { $('#lg-stats').textContent = 'Arbre vide'; return; }
     const ans = donnees.map(d => annee(d.data.birthday)).filter(Boolean).sort();
     const gens = Math.max(...donnees.map(d => d.data._generation));
-    const centre = graphique && parId(graphique.store.getMainId());
+    const centre = parId(idCentre());
     $('#lg-stats').textContent = `${donnees.length} membres • ${gens} générations${ans.length ? ' • Origine ' + ans[0] : ''}${peutModifier ? '' : ' • lecture seule'}`
-      + (centre ? ` • Centré sur ${centre.data['first name']}` : '');
+      + (centre ? ` • ${mode === 'centree' ? 'Centré sur' : 'Sélection :'} ${centre.data['first name']}` : '');
   }
   // Personne qui correspond au compte connecté (même prénom, une seule correspondance), sinon la personne de départ de l'arbre.
   function personneMoi() {
@@ -138,9 +137,11 @@
     return parId(personneDepart) ? String(personneDepart) : donnees[0]?.id;
   }
   function mettreAJourZoom() {
-    if (graphique) $('#lg-niveau').textContent = Math.round(d3.zoomTransform(graphique.svg).k * 100) + ' %';
+    const cible = mode === 'centree' ? graphique?.svg : famille?.conteneur;
+    if (cible) $('#lg-niveau').textContent = Math.round(d3.zoomTransform(cible).k * 100) + ' %';
   }
   function estomperLiens() {
+    if (mode === 'famille') return estomperFamille();
     if (!graphique) return;
     const ids = lignee(graphique.store.getMainId());
     d3.select(graphique.svg).selectAll('path.link').classed('lg-estompe', function (l) {
@@ -150,14 +151,86 @@
     });
   }
 
+  // ---- Vue « toute la famille »
+  const LC = 210, HC = 112;
+  function dessinerFamille(idCentre, transformation) {
+    const conteneur = $('#lg-arbre');
+    conteneur.innerHTML = '<div class="lg-monde"><svg class="lg-liens" xmlns="http://www.w3.org/2000/svg"></svg></div>';
+    const monde = conteneur.firstChild, svg = monde.firstChild, c = id => disposition.cartes.get(String(id));
+    let traces = '';
+    const anneaux = (x, y) => `<g class="lg-anneaux"><circle cx="${x - 4}" cy="${y}" r="6"/><circle cx="${x + 4}" cy="${y}" r="6"/></g>`;
+    for (const { a, b } of disposition.couples) {
+      const A = c(a), B = c(b), ids = `${a} ${b}`;
+      if (A.y === B.y) traces += `<g data-ids="${ids}"><path class="lg-lien" d="M${A.x + LC / 2},${A.y} H${B.x - LC / 2}"/>${anneaux((A.x + LC / 2 + B.x - LC / 2) / 2, A.y)}</g>`;
+      else traces += `<g data-ids="${ids}"><path class="lg-lien" d="M${A.x + LC / 2},${A.y} H${(A.x + B.x) / 2} V${B.y} H${B.x - LC / 2}"/></g>`;
+    }
+    for (const f of disposition.familles) {
+      const ps = f.parents.map(c), es = f.enfants.map(c);
+      const couple = ps.length === 2 && ps[0].y === ps[1].y;
+      const ox = couple ? (ps[0].x + LC / 2 + ps[1].x - LC / 2) / 2 : ps[0].x, oy = couple ? ps[0].y + 7 : ps[0].y + HC / 2;
+      const yBarre = Math.min(...es.map(e => e.y)) - HC / 2 - 34;
+      // Un groupe par enfant pour pouvoir estomper précisément en « focus lignée ».
+      traces += `<g data-ids="${f.parents.join(' ')}"><path class="lg-lien" d="M${ox},${oy} V${yBarre}"/></g>`;
+      f.enfants.forEach((e, k) => {
+        const E = es[k];
+        traces += `<g data-ids="${f.parents.join(' ')} ${e}"><path class="lg-lien" d="M${ox},${yBarre} H${E.x} V${E.y - HC / 2}"/></g>`;
+      });
+    }
+    svg.innerHTML = traces;
+    for (const d of donnees) {
+      const q = c(d.id), el = document.createElement('div');
+      el.className = 'lg-place'; el.dataset.id = d.id;
+      el.style.left = (q.x - LC / 2) + 'px'; el.style.top = (q.y - HC / 2) + 'px';
+      el.innerHTML = carte({ data: d });
+      monde.appendChild(el);
+    }
+    const zoom = d3.zoom().scaleExtent([0.12, 2.5])
+      .on('zoom', e => { monde.style.transform = `translate(${e.transform.x}px,${e.transform.y}px) scale(${e.transform.k})`; mettreAJourZoom(); });
+    const sel = d3.select(conteneur).call(zoom).on('dblclick.zoom', null);
+    famille = { conteneur, monde, zoom, selection: parId(idCentre) ? String(idCentre) : personneMoi() };
+    conteneur.onclick = e => { const el = e.target.closest('.lg-place'); if (el) { selectionner(el.dataset.id); ouvrirFiche(el.dataset.id); } };
+    marquerSelection();
+    if (transformation) sel.call(zoom.transform, transformation);
+    else if (window.innerWidth < 760) centrerFamille(famille.selection, 0.8, 0);
+    else ajusterFamille(0);
+  }
+  function ajusterFamille(duree = 600) {
+    if (!famille) return;
+    const w = famille.conteneur.clientWidth, h = famille.conteneur.clientHeight, marge = 70, haut = 90;
+    const k = Math.min((w - 2 * marge) / disposition.largeur, (h - haut - marge) / disposition.hauteur, 1.1);
+    const t = d3.zoomIdentity.translate((w - disposition.largeur * k) / 2, haut + (h - haut - disposition.hauteur * k) / 2).scale(k);
+    d3.select(famille.conteneur).transition().duration(duree).call(famille.zoom.transform, t);
+  }
+  function centrerFamille(id, echelle, duree = 600) {
+    const q = disposition?.cartes.get(String(id)); if (!q || !famille) return;
+    const w = famille.conteneur.clientWidth, h = famille.conteneur.clientHeight;
+    const k = echelle ?? Math.max(d3.zoomTransform(famille.conteneur).k, 0.6);
+    const t = d3.zoomIdentity.translate(w / 2 - q.x * k, h / 2 - q.y * k).scale(k);
+    d3.select(famille.conteneur).transition().duration(duree).call(famille.zoom.transform, t);
+  }
+  function selectionner(id) { if (!famille) return; famille.selection = String(id); marquerSelection(); mettreAJourStats(); }
+  function marquerSelection() {
+    famille.monde.querySelectorAll('.lg-place').forEach(el => el.classList.toggle('card-main', el.dataset.id === famille.selection));
+    estomperFamille();
+  }
+  function estomperFamille() {
+    if (!famille) return;
+    const ids = focus && famille.selection ? lignee(famille.selection) : null;
+    famille.monde.querySelectorAll('.lg-place').forEach(el => el.querySelector('.lg-carte').classList.toggle('lg-estompee', !!ids && !ids.has(el.dataset.id)));
+    famille.monde.querySelectorAll('svg g[data-ids]').forEach(g => g.classList.toggle('lg-estompe', !!ids && g.dataset.ids.split(' ').some(i => !ids.has(i))));
+  }
+
   // ---- Arbre
-  function dessiner(idCentre) {
+  function dessiner(idCentre, transformation) {
     const conteneur = $('#lg-arbre');
     conteneur.innerHTML = '';
     conteneur.classList.toggle('lg-vide', !donnees.length);
+    conteneur.classList.toggle('lg-mode-famille', mode === 'famille');
     conteneur.dataset.message = 'Cet arbre est vide : ajoutez un premier membre.';
-    graphique = null;
+    d3.select(conteneur).on('.zoom', null); conteneur.onclick = null;
+    graphique = null; famille = null;
     if (!donnees.length) { mettreAJourStats(); return; }
+    if (mode === 'famille') { dessinerFamille(idCentre, transformation); mettreAJourStats(); return; }
     graphique = f3.createChart('#lg-arbre', donnees)
       .setTransitionTime(650).setCardXSpacing(250).setCardYSpacing(175)
       .setSingleParentEmptyCard(false).setShowSiblingsOfMain(true)
@@ -175,25 +248,28 @@
     mettreAJourStats();
   }
   function centrer(id) {
+    if (mode === 'famille') { selectionner(id); centrerFamille(id); return; }
     if (!graphique) return;
     graphique.updateMainId(String(id)); graphique.updateTree({ tree_position: 'main_to_middle' });
     mettreAJourStats();
   }
 
-  async function chargerArbre(id, idCentre) {
+  async function chargerArbre(id, idCentre, transformation) {
     const r = await api('GET', `/trees/${id}`);
     arbre = r.tree; personnes = r.people || []; liens = r.relationships || [];
     peutModifier = !!r.canEdit;
     racine().classList.toggle('lg-lecture-seule', !peutModifier);
     personneDepart = r.tree.root_person_id;
     construireDonnees();
-    dessiner(idCentre);
+    dessiner(idCentre, transformation);
     retenir('arbre', id);
   }
   // Recharge les données après une modification sans perdre la personne au centre.
   async function recharger(idCentre) {
-    const centre = idCentre ?? graphique?.store.getMainId();
-    await chargerArbre(arbre.id, centre);
+    const centre = idCentre ?? (mode === 'famille' ? famille?.selection : graphique?.store.getMainId());
+    // En vue famille, on garde le cadrage actuel pour ne pas faire sauter l'écran après une modification.
+    const cadrage = mode === 'famille' && famille ? d3.zoomTransform(famille.conteneur) : undefined;
+    await chargerArbre(arbre.id, centre, cadrage);
     if (choisi && personne(choisi)) ouvrirFiche(choisi); else fermerFiche();
   }
 
@@ -379,12 +455,24 @@
 
   function brancher() {
     $('#lg-choix-arbre').onchange = e => { fermerFiche(); chargerArbre(Number(e.target.value)).catch(erreur); };
-    $('#lg-zoom-plus').onclick = () => { if (graphique) { f3.handlers.manualZoom({ amount: 1.2, svg: graphique.svg, transition_time: 250 }); setTimeout(mettreAJourZoom, 300); } };
-    $('#lg-zoom-moins').onclick = () => { if (graphique) { f3.handlers.manualZoom({ amount: 1 / 1.2, svg: graphique.svg, transition_time: 250 }); setTimeout(mettreAJourZoom, 300); } };
-    $('#lg-recentrer').onclick = () => graphique?.updateTree({ tree_position: 'fit' });
+    const zoomer = facteur => {
+      if (famille) d3.select(famille.conteneur).transition().duration(250).call(famille.zoom.scaleBy, facteur);
+      else if (graphique) { f3.handlers.manualZoom({ amount: facteur, svg: graphique.svg, transition_time: 250 }); setTimeout(mettreAJourZoom, 300); }
+    };
+    $('#lg-zoom-plus').onclick = () => zoomer(1.2);
+    $('#lg-zoom-moins').onclick = () => zoomer(1 / 1.2);
+    $('#lg-recentrer').onclick = () => { if (famille) ajusterFamille(); else graphique?.updateTree({ tree_position: 'fit' }); };
+    const libelleVue = () => { $('#lg-vue .lg-texte').textContent = mode === 'famille' ? 'Vue centrée' : 'Toute la famille'; };
+    libelleVue();
+    $('#lg-vue').onclick = () => {
+      const centre = idCentre();
+      mode = mode === 'famille' ? 'centree' : 'famille'; retenir('vue', mode); libelleVue();
+      dessiner(centre);
+      toast(mode === 'famille' ? 'Toute la famille' : 'Vue centrée sur une personne');
+    };
     $('#lg-focus').onclick = () => {
       focus = !focus; $('#lg-focus').classList.toggle('lg-actif', focus);
-      graphique?.updateTree({ tree_position: 'inherit' });
+      if (famille) estomperFamille(); else graphique?.updateTree({ tree_position: 'inherit' });
       toast(focus ? 'Lignée directe mise en valeur' : "Tout l'arbre est affiché");
     };
     $('#lg-outils').onclick = e => { e.stopPropagation(); const m = $('#lg-menu'); m.style.display = m.style.display === 'block' ? 'none' : 'block'; };
