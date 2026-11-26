@@ -43,6 +43,8 @@ Util::addScript('lignees', 'lignees');
         <button class="lg-bouton lg-panneau" id="lg-outils" title="Options">⋮</button>
         <div class="lg-menu lg-panneau" id="lg-menu">
           <button id="lg-theme"><span>Changer de thème</span><span class="lg-pastille-theme" id="lg-nom-theme">Parchemin</span></button>
+          <button id="lg-nouvel-arbre-btn"><span>Nouvel arbre…</span></button>
+          <button id="lg-partage-btn"><span>Partager cet arbre…</span></button>
           <button id="lg-import-ged"><span>Importer un fichier GEDCOM</span></button>
           <button id="lg-export-ged"><span>Exporter en GEDCOM</span></button>
           <button id="lg-moi"><span>Revenir à moi</span></button>
@@ -84,6 +86,7 @@ Util::addScript('lignees', 'lignees');
         <button data-action="conjoint">Ajouter un conjoint</button>
         <button data-action="enfant">Ajouter un enfant</button>
         <button data-action="relier">Relier à une personne existante</button>
+        <button data-action="pont">Relier à la même personne dans un autre arbre</button>
         <label class="lg-bouton-fichier">Changer la photo<input type="file" accept="image/*" id="lg-photo" hidden></label>
         <button data-action="supprimer" class="lg-danger">Supprimer cette personne</button>
       </div>
@@ -106,6 +109,33 @@ Util::addScript('lignees', 'lignees');
         <select name="type"><option value="parent">… est son parent</option><option value="enfant">… est son enfant</option><option value="conjoint">… est son conjoint</option></select></div>
       <div><label>Personne</label><select name="personne" required></select></div>
       <p class="lg-aide" id="lg-relier-aide"></p>
+      <div class="lg-dialogue-boutons"><button value="annuler" formnovalidate>Annuler</button><button value="ok" class="lg-enregistrer">Relier</button></div>
+    </form>
+  </dialog>
+  <dialog id="lg-nouvel-arbre" class="lg-panneau">
+    <form method="dialog" class="lg-champs" id="lg-form-nouvel-arbre">
+      <h3 class="lg-serif">Nouvel arbre</h3>
+      <div><label>Nom de l'arbre</label><input name="nom" required placeholder="ex. Famille Angerly"></div>
+      <div><label>Partager en modification avec</label><div class="lg-cases" id="lg-nouvel-arbre-groupes"></div></div>
+      <p class="lg-aide">Pour relier ensuite une personne de cet arbre à la même personne d'un autre arbre : sa fiche → Actions → « Relier à la même personne dans un autre arbre ».</p>
+      <div class="lg-dialogue-boutons"><button value="annuler" formnovalidate>Annuler</button><button value="ok" class="lg-enregistrer">Créer l'arbre</button></div>
+    </form>
+  </dialog>
+  <dialog id="lg-partage" class="lg-panneau">
+    <form method="dialog" class="lg-champs" id="lg-form-partage">
+      <h3 class="lg-serif" id="lg-partage-titre">Partager cet arbre</h3>
+      <div class="lg-liste-partages" id="lg-partages"></div>
+      <div class="lg-ligne2"><div><label>Groupe</label><select name="groupe"></select></div>
+        <div><label>Droits</label><select name="droit"><option value="edit">Modifier</option><option value="view">Voir seulement</option></select></div></div>
+      <div class="lg-dialogue-boutons"><button value="annuler" formnovalidate>Fermer</button><button type="button" class="lg-enregistrer" id="lg-partage-ajouter">Partager</button></div>
+    </form>
+  </dialog>
+  <dialog id="lg-pont" class="lg-panneau">
+    <form method="dialog" class="lg-champs" id="lg-form-pont">
+      <h3 class="lg-serif" id="lg-pont-titre">Relier à un autre arbre</h3>
+      <div><label>Autre arbre</label><select name="arbre" required></select></div>
+      <div><label>La même personne dans cet arbre</label><select name="personne" required></select></div>
+      <p class="lg-aide">Les deux fiches restent séparées ; le pont permet de passer d'un arbre à l'autre (« Voir sa lignée »).</p>
       <div class="lg-dialogue-boutons"><button value="annuler" formnovalidate>Annuler</button><button value="ok" class="lg-enregistrer">Relier</button></div>
     </form>
   </dialog>

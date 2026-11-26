@@ -225,6 +225,9 @@ public function __construct(IRequest $oRequest, private GenealogyService $oServi
  * @return DataResponse HTTP odpověď s výslednými daty nebo chybovou zprávou ve formátu JSON.
  */
     #[NoAdminRequired] public function deleteRelation(int $id): DataResponse { return $this->oService->deleteRelation($id); }
+    #[NoAdminRequired] public function passerelles(int $treeId): DataResponse { return $this->oService->passerelles($treeId); }
+    #[NoAdminRequired] public function createPasserelle(int $personId): DataResponse { return $this->oService->createPasserelle($personId); }
+    #[NoAdminRequired] public function deletePasserelle(int $id): DataResponse { return $this->oService->deletePasserelle($id); }
     /**
  * @brief Přidá životní událost k osobě.
  * @param int $personId Identifikátor osoby.

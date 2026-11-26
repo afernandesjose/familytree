@@ -532,7 +532,7 @@ fn($nA,$aB)=>(int)$aB['updated_at']<=>(int)$nA['updated_at']);return new DataRes
  * @param int $nId Identifikátor cílového záznamu.
  * @return DataResponse HTTP odpověď s výslednými daty nebo chybovou zprávou ve formátu JSON.
  */
-  public function deleteTree(int $nId):DataResponse{$oT=$this->row('hc_familytree_trees',$nId);if(!$oT||$oT['owner_uid']!==$this->sUid)return $this->deny();foreach(['hc_familytree_proposals','hc_familytree_evidence','hc_familytree_search_log','hc_familytree_research_tasks','hc_familytree_history','hc_familytree_research','hc_familytree_doc_links','hc_familytree_relations','hc_familytree_events','hc_familytree_documents','hc_familytree_shares','hc_familytree_people'] as $sTable){$oQ=$this->oDb->getQueryBuilder();$oQ->delete($sTable)->where($oQ->expr()->eq('tree_id',$oQ->createNamedParameter($nId)))->executeStatement();}{ $oQ=$this->oDb->getQueryBuilder();$oQ->delete('hc_familytree_trees')->where($oQ->expr()->eq('id',$oQ->createNamedParameter($nId)))->executeStatement(); }return new DataResponse(['ok'=>true]);}
+  public function deleteTree(int $nId):DataResponse{$oT=$this->row('hc_familytree_trees',$nId);if(!$oT||$oT['owner_uid']!==$this->sUid)return $this->deny();$this->supprimerPasserelles(array_map(fn($oP)=>(int)$oP['id'],$this->rows('hc_familytree_people',['tree_id'=>$nId])),'personne');foreach(['hc_familytree_proposals','hc_familytree_evidence','hc_familytree_search_log','hc_familytree_research_tasks','hc_familytree_history','hc_familytree_research','hc_familytree_doc_links','hc_familytree_relations','hc_familytree_events','hc_familytree_documents','hc_familytree_shares','hc_familytree_people'] as $sTable){$oQ=$this->oDb->getQueryBuilder();$oQ->delete($sTable)->where($oQ->expr()->eq('tree_id',$oQ->createNamedParameter($nId)))->executeStatement();}{ $oQ=$this->oDb->getQueryBuilder();$oQ->delete('hc_familytree_trees')->where($oQ->expr()->eq('id',$oQ->createNamedParameter($nId)))->executeStatement(); }return new DataResponse(['ok'=>true]);}
   /**
  * @brief Odstraní all trees pro oprávněně přístupný rodokmen.
  * @return DataResponse HTTP odpověď Nextcloudu s daty nebo oznámením chyby.
@@ -1031,7 +1031,7 @@ fn($nA,$aB)=>(int)$aB['updated_at']<=>(int)$nA['updated_at']);return new DataRes
  * @param int $nId Identifikátor cílového záznamu.
  * @return DataResponse HTTP odpověď s výslednými daty nebo chybovou zprávou ve formátu JSON.
  */
-  public function deletePerson(int $nId):DataResponse{$oP=$this->row('hc_familytree_people',$nId);if(!$oP||!$this->can((int)$oP['tree_id'],true))return $this->deny();$this->deleteLinksFor('person',$nId);foreach($this->rows('hc_familytree_events',['person_id'=>$nId]) as $oE)$this->deleteLinksFor('event',(int)$oE['id']);foreach($this->rows('hc_familytree_relations',['tree_id'=>$oP['tree_id']]) as $oR)if((int)$oR['person1_id']===$nId||(int)$oR['person2_id']===$nId)$this->deleteLinksFor('relation',(int)$oR['id']);foreach($this->rows('hc_familytree_events',['person_id'=>$nId]) as $oEvent)$this->delete('hc_familytree_events',(int)$oEvent['id']);foreach($this->rows('hc_familytree_relations',['tree_id'=>$oP['tree_id']]) as $oRelation)if((int)$oRelation['person1_id']===$nId||(int)$oRelation['person2_id']===$nId)$this->delete('hc_familytree_relations',(int)$oRelation['id']);$this->oPhotos->removeForPerson($oP);$this->delete('hc_familytree_people',$nId);return new DataResponse(['ok'=>true]);}
+  public function deletePerson(int $nId):DataResponse{$oP=$this->row('hc_familytree_people',$nId);if(!$oP||!$this->can((int)$oP['tree_id'],true))return $this->deny();$this->supprimerPasserelles([$nId],'personne');$this->deleteLinksFor('person',$nId);foreach($this->rows('hc_familytree_events',['person_id'=>$nId]) as $oE)$this->deleteLinksFor('event',(int)$oE['id']);foreach($this->rows('hc_familytree_relations',['tree_id'=>$oP['tree_id']]) as $oR)if((int)$oR['person1_id']===$nId||(int)$oR['person2_id']===$nId)$this->deleteLinksFor('relation',(int)$oR['id']);foreach($this->rows('hc_familytree_events',['person_id'=>$nId]) as $oEvent)$this->delete('hc_familytree_events',(int)$oEvent['id']);foreach($this->rows('hc_familytree_relations',['tree_id'=>$oP['tree_id']]) as $oRelation)if((int)$oRelation['person1_id']===$nId||(int)$oRelation['person2_id']===$nId)$this->delete('hc_familytree_relations',(int)$oRelation['id']);$this->oPhotos->removeForPerson($oP);$this->delete('hc_familytree_people',$nId);return new DataResponse(['ok'=>true]);}
   /**
  * @brief Vytvoří relation používané v GenealogyService.
  * @param int $nTreeId Identifikátor rodokmenu.
@@ -1162,4 +1162,76 @@ fn($nA,$aB)=>(int)$aB['updated_at']<=>(int)$nA['updated_at']);return new DataRes
  * @return DataResponse HTTP odpověď s výslednými daty nebo chybovou zprávou ve formátu JSON.
  */
   public function deleteShare(int $nId):DataResponse{$oS=$this->row('hc_familytree_shares',$nId);$oT=$oS?$this->row('hc_familytree_trees',(int)$oS['tree_id']):null;if(!$oT||$oT['owner_uid']!==$this->sUid)return $this->deny();$this->delete('hc_familytree_shares',$nId);return new DataResponse(['ok'=>true]);}
+
+  // ---- Lignées : ponts entre arbres (une même personne présente dans deux arbres)
+
+  /**
+   * Ponts des personnes d'un arbre vers des personnes d'autres arbres que l'utilisateur peut voir.
+   * @param int $nTreeId Arbre affiché.
+   * @return DataResponse Liste de {id, person_id, cible: {id, tree_id, tree_name, given_name, surname, birth_date}, canDelete}.
+   */
+  public function passerelles(int $nTreeId): DataResponse {
+   if (!$this->can($nTreeId)) return $this->deny();
+   $aLocales = [];
+   foreach ($this->rows('hc_familytree_people', ['tree_id' => $nTreeId]) as $oP) $aLocales[(int)$oP['id']] = true;
+   $aResultat = [];
+   foreach ($this->rows('lignees_passerelles') as $oPont) {
+    $nA = (int)$oPont['person_id']; $nB = (int)$oPont['cible_id'];
+    if (isset($aLocales[$nA])) { $nIci = $nA; $nLa = $nB; } elseif (isset($aLocales[$nB])) { $nIci = $nB; $nLa = $nA; } else continue;
+    $oCible = $this->row('hc_familytree_people', $nLa);
+    if (!$oCible || !$this->can((int)$oCible['tree_id'])) continue;
+    $oArbre = $this->row('hc_familytree_trees', (int)$oCible['tree_id']);
+    $aResultat[] = ['id' => (int)$oPont['id'], 'person_id' => $nIci,
+     'cible' => ['id' => $nLa, 'tree_id' => (int)$oCible['tree_id'], 'tree_name' => (string)($oArbre['name'] ?? ''),
+      'given_name' => (string)$oCible['given_name'], 'surname' => (string)$oCible['surname'], 'birth_date' => (string)$oCible['birth_date']],
+     'canDelete' => $this->can($nTreeId, true) || $this->can((int)$oCible['tree_id'], true)];
+   }
+   return new DataResponse($aResultat);
+  }
+
+  /**
+   * Relie une personne à la même personne dans un autre arbre.
+   * Il faut pouvoir modifier l'arbre de la personne et voir l'arbre cible.
+   */
+  public function createPasserelle(int $nPersonId): DataResponse {
+   $oPersonne = $this->row('hc_familytree_people', $nPersonId);
+   $nCibleId = (int)($this->body()['cible_id'] ?? 0);
+   $oCible = $nCibleId ? $this->row('hc_familytree_people', $nCibleId) : null;
+   if (!$oPersonne || !$oCible || !$this->can((int)$oPersonne['tree_id'], true) || !$this->can((int)$oCible['tree_id'])) return $this->deny();
+   if ((int)$oPersonne['tree_id'] === (int)$oCible['tree_id']) return new JSONResponse(['error' => 'Les deux personnes sont dans le même arbre : utilisez un lien de parenté.'], 400);
+   foreach ($this->rows('lignees_passerelles') as $oPont) {
+    $aPaire = [(int)$oPont['person_id'], (int)$oPont['cible_id']];
+    if ($aPaire === [$nPersonId, $nCibleId] || $aPaire === [$nCibleId, $nPersonId]) return new DataResponse(['id' => (int)$oPont['id']]);
+   }
+   $oQ = $this->oDb->getQueryBuilder();
+   $oQ->insert('lignees_passerelles')->values([
+    'person_id' => $oQ->createNamedParameter($nPersonId), 'cible_id' => $oQ->createNamedParameter($nCibleId),
+    'created_by' => $oQ->createNamedParameter($this->sUid), 'created_at' => $oQ->createNamedParameter(time()),
+   ])->executeStatement();
+   return new DataResponse(['id' => $oQ->getLastInsertId()]);
+  }
+
+  /** Supprime un pont (il faut pouvoir modifier l'un des deux arbres). Les personnes ne sont pas touchées. */
+  public function deletePasserelle(int $nId): DataResponse {
+   $oPont = $this->rows('lignees_passerelles', ['id' => $nId])[0] ?? null;
+   if (!$oPont) return $this->deny();
+   $bDroit = false;
+   foreach ([(int)$oPont['person_id'], (int)$oPont['cible_id']] as $nP) {
+    $oP = $this->row('hc_familytree_people', $nP);
+    if ($oP && $this->can((int)$oP['tree_id'], true)) $bDroit = true;
+   }
+   if (!$bDroit) return $this->deny();
+   $this->supprimerPasserelles([$nId], 'id');
+   return new DataResponse(['ok' => true]);
+  }
+
+  /** Supprime les ponts dont la colonne $sColonne (ou les deux côtés si 'personne') vaut l'un des identifiants. */
+  private function supprimerPasserelles(array $aIds, string $sColonne): void {
+   if (!$aIds) return;
+   $aColonnes = $sColonne === 'personne' ? ['person_id', 'cible_id'] : [$sColonne];
+   foreach ($aColonnes as $sCol) {
+    $oQ = $this->oDb->getQueryBuilder();
+    $oQ->delete('lignees_passerelles')->where($oQ->expr()->in($sCol, $oQ->createNamedParameter($aIds, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT_ARRAY)))->executeStatement();
+   }
+  }
 }

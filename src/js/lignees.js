@@ -52,6 +52,8 @@
   let disposition = null, famille = null; // famille = { conteneur, monde, zoom, selection }
   // Lignées : la vue famille n'affiche qu'une lignée à la fois (avec les conjoints venus d'ailleurs), ou toutes.
   let complet = null, ligneesNommees = [], ligneeAffichee = null;
+  // Ponts vers d'autres arbres : id de personne → [{id, cible: {id, tree_id, tree_name, ...}, canDelete}]
+  let ponts = new Map(), partages = [], estProprietaire = false;
   const parId = id => donnees.find(d => d.id === String(id));
   const personne = id => personnes.find(p => String(p.id) === String(id));
 
@@ -164,7 +166,7 @@
     const dates = ne && mort ? `${ne} – ${mort}` : ne ? `Né${p.gender === 'F' ? 'e' : ''} en ${ne}` : 'Dates inconnues';
     const estompee = focus && idCentre() && !lignee(idCentre()).has(d.data.id);
     return `<div class="lg-carte lg-${p.gender}${estompee ? ' lg-estompee' : ''}${mort || !p.vivant ? ' lg-decede' : ''}">
-      <span class="lg-generation">${romain(p._generation)}</span>
+      <span class="lg-generation">${romain(p._generation)}</span>${ponts.has(d.data.id) ? `<span class="lg-pont-carte" title="Aussi dans l'arbre « ${echapper(ponts.get(d.data.id)[0].cible.tree_name)} »">🔗</span>` : ''}
       <div class="lg-haut"><div class="lg-medaillon">${medaillon(p)}</div>
         <div class="lg-identite"><div class="lg-prenom">${echapper(p['first name'])}</div><div class="lg-nom">${echapper(p['last name'])}</div></div></div>
       <div class="lg-bas"><span>${echapper(p.occupation || (p.place || '').split(',')[0])}</span><span>${dates}</span></div>
@@ -176,7 +178,8 @@
     const ans = donnees.map(d => annee(d.data.birthday)).filter(Boolean).sort();
     const gens = Math.max(...donnees.map(d => d.data._generation));
     const centre = parId(idCentre());
-    $('#lg-stats').textContent = `${donnees.length} membres • ${gens} générations${ans.length ? ' • Origine ' + ans[0] : ''}${peutModifier ? '' : ' • lecture seule'}`
+    const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? 's' : ''}`;
+    $('#lg-stats').textContent = `${pluriel(donnees.length, 'membre')} • ${pluriel(gens, 'génération')}${ans.length ? ' • Origine ' + ans[0] : ''}${peutModifier ? '' : ' • lecture seule'}`
       + (centre ? ` • ${mode === 'centree' ? 'Centré sur' : 'Sélection :'} ${centre.data['first name']}` : '');
   }
   // Personne qui correspond au compte connecté (même prénom, une seule correspondance), sinon la personne de départ de l'arbre.
@@ -312,10 +315,21 @@
     const r = await api('GET', `/trees/${id}`);
     if (arbre?.id !== r.tree.id) ligneeAffichee = null;
     arbre = r.tree; personnes = r.people || []; liens = r.relationships || [];
+    partages = r.shares || []; estProprietaire = !!r.isOwner;
+    ponts = new Map();
+    try {
+      for (const pt of await api('GET', `/trees/${id}/passerelles`)) {
+        const k = String(pt.person_id); if (!ponts.has(k)) ponts.set(k, []); ponts.get(k).push(pt);
+      }
+    } catch (e) { /* ponts facultatifs */ }
     peutModifier = !!r.canEdit;
     racine().classList.toggle('lg-lecture-seule', !peutModifier);
     personneDepart = r.tree.root_person_id;
     construireDonnees();
+    // Arrivée depuis un autre arbre : afficher la lignée où se trouve la personne demandée.
+    if (mode === 'famille' && idCentre && complet?.cartes.has(String(idCentre)) && !disposition?.cartes.has(String(idCentre))) {
+      ligneeAffichee = cleOuToutes(idCentre); disposition = dispositionLignee(ligneeAffichee); majGenerations(); remplirLignees();
+    }
     dessiner(idCentre, transformation);
     retenir('arbre', id);
   }
@@ -336,10 +350,13 @@
     m.innerHTML = medaillon(p); m.className = 'lg-medaillon lg-' + p.gender;
     $('#lg-fiche-generation').textContent = 'Génération ' + romain(p._generation);
     $('#lg-fiche-nom').textContent = `${p['first name']} ${p['last name'] || ''}`.trim();
-    const autre = mode === 'famille' && ligneeAffichee !== 'toutes' ? ligneesNommees.find(l => l.cle === complet?.cleDe.get(String(id)) && l.cle !== ligneeAffichee) : null;
+    const pont = (ponts.get(String(id)) || [])[0];
+    const autre = !pont && mode === 'famille' && ligneeAffichee !== 'toutes' ? ligneesNommees.find(l => l.cle === complet?.cleDe.get(String(id)) && l.cle !== ligneeAffichee) : null;
     const bv = $('#lg-voir-lignee');
-    bv.hidden = !autre;
-    if (autre) { bv.textContent = `Voir sa lignée : ${autre.nom}`; bv.dataset.cle = autre.cle; }
+    bv.hidden = !pont && !autre;
+    delete bv.dataset.cle; delete bv.dataset.arbre; delete bv.dataset.personne;
+    if (pont) { bv.textContent = `Voir sa lignée : arbre « ${pont.cible.tree_name} »`; bv.dataset.arbre = pont.cible.tree_id; bv.dataset.personne = pont.cible.id; }
+    else if (autre) { bv.textContent = `Voir sa lignée : ${autre.nom}`; bv.dataset.cle = autre.cle; }
     const f = $('#lg-onglet-identite');
     for (const champ of ['given_name', 'surname', 'birth_surname', 'birth_place', 'death_place', 'occupation', 'notes']) f[champ].value = brut[champ] || '';
     f.gender.value = brut.gender === 'female' ? 'female' : brut.gender === 'male' ? 'male' : '';
@@ -358,7 +375,11 @@
         <div><strong>${echapper(q['first name'])} ${echapper(q['last name'])}</strong><small>${dateLongue(q.birthday) || 'Date inconnue'}</small></div></button>
         ${r ? `<button class="lg-delier" data-relation="${r.id}" data-nom="${echapper(q['first name'])}" title="Supprimer ce lien">✕</button>` : ''}</div>`;
     }).join('') : '<p class="lg-vide-liste">Aucun</p>');
-    $('#lg-onglet-liens').innerHTML = bloc('Parents', d.rels.parents, 'parent') + bloc('Conjoints', d.rels.spouses, 'conjoint') + bloc('Enfants', d.rels.children, 'enfant') + bloc('Frères et sœurs', freres);
+    const ailleurs = (ponts.get(d.id) || []).map(pt => `<div class="lg-ligne-lien"><button class="lg-lien-personne" data-arbre="${pt.cible.tree_id}" data-personne="${pt.cible.id}">
+        <div class="lg-medaillon lg-${p.gender}">🔗</div><div><strong>${echapper(pt.cible.given_name)} ${echapper(pt.cible.surname)}</strong><small>Arbre « ${echapper(pt.cible.tree_name)} »</small></div></button>
+        ${pt.canDelete ? `<button class="lg-delier" data-pont="${pt.id}" data-nom="l'arbre « ${echapper(pt.cible.tree_name)} »" title="Supprimer ce pont">✕</button>` : ''}</div>`).join('');
+    $('#lg-onglet-liens').innerHTML = bloc('Parents', d.rels.parents, 'parent') + bloc('Conjoints', d.rels.spouses, 'conjoint') + bloc('Enfants', d.rels.children, 'enfant') + bloc('Frères et sœurs', freres)
+      + (ailleurs ? `<h3>Dans d'autres arbres</h3>${ailleurs}` : '');
     $('#lg-fiche').classList.add('lg-ouvert');
   }
   function fermerFiche() { $('#lg-fiche').classList.remove('lg-ouvert'); choisi = null; }
@@ -472,9 +493,99 @@
   }
   async function delier(bouton) {
     const d = parId(choisi);
+    if (bouton.dataset.pont) {
+      if (!confirm(`Supprimer le pont entre ${d.data['first name']} et ${bouton.dataset.nom} ? Les fiches restent dans les deux arbres.`)) return;
+      try { await api('DELETE', `/passerelles/${bouton.dataset.pont}`); await recharger(); toast('Pont supprimé'); } catch (err) { erreur(err); }
+      return;
+    }
     if (!confirm(`Supprimer le lien entre ${d.data['first name']} et ${bouton.dataset.nom} ? Les deux personnes restent dans l'arbre.`)) return;
     try { await api('DELETE', `/relationships/${bouton.dataset.relation}`); await recharger(); toast('Lien supprimé'); }
     catch (err) { erreur(err); }
+  }
+
+  // ---- Plusieurs arbres : aller vers un autre arbre, ponts, création et partage
+  async function allerVers(idArbre, idPersonne) {
+    if (!arbres.some(a => String(a.id) === String(idArbre))) arbres = await api('GET', '/trees');
+    remplirChoix(Number(idArbre)); fermerFiche();
+    await chargerArbre(Number(idArbre), String(idPersonne));
+    if (idPersonne && parId(idPersonne)) { centrer(String(idPersonne)); ouvrirFiche(String(idPersonne)); }
+    toast(`Arbre « ${arbre.name} »`);
+  }
+  async function pont() {
+    if (!peutModifier || !choisi) return;
+    const dlg = $('#lg-pont'), f = $('#lg-form-pont'), d = parId(choisi);
+    const autres = arbres.filter(a => a.id !== arbre.id);
+    if (!autres.length) { toast("Créez d'abord un autre arbre (menu ⋮ → Nouvel arbre)"); return; }
+    $('#lg-pont-titre').textContent = `Relier ${d.data['first name']} à un autre arbre`;
+    f.arbre.innerHTML = autres.map(a => `<option value="${a.id}">${echapper(a.name)}</option>`).join('');
+    const charger = async () => {
+      f.personne.innerHTML = '<option value="">Chargement…</option>';
+      try {
+        const r = await api('GET', `/trees/${f.arbre.value}`), prenom = (d.data['first name'] || '').toLowerCase();
+        const gens = (r.people || []).sort((a, b) => ((b.given_name || '').toLowerCase() === prenom) - ((a.given_name || '').toLowerCase() === prenom)
+          || `${a.given_name} ${a.surname}`.localeCompare(`${b.given_name} ${b.surname}`, 'fr'));
+        f.personne.innerHTML = gens.length ? gens.map(x => `<option value="${x.id}">${echapper(x.given_name)} ${echapper(x.surname)}${annee(x.birth_date) ? ' (' + annee(x.birth_date) + ')' : ''}</option>`).join('')
+          : '<option value="">Cet arbre est vide</option>';
+      } catch (err) { f.personne.innerHTML = '<option value="">Arbre inaccessible</option>'; }
+    };
+    f.arbre.onchange = charger; await charger();
+    dlg.onclose = async () => {
+      if (dlg.returnValue !== 'ok' || !f.personne.value) return;
+      try { await api('POST', `/people/${choisi}/passerelles`, { cible_id: Number(f.personne.value) }); await recharger(); toast('Pont créé entre les deux arbres'); }
+      catch (err) { erreur(err); }
+    };
+    dlg.showModal();
+  }
+  // Groupes Nextcloud de l'utilisateur (pour proposer le partage)
+  async function mesGroupes() {
+    try {
+      const uid = OC.getCurrentUser().uid;
+      const r = await fetch(OC.linkToOCS('cloud/users', 2) + encodeURIComponent(uid) + '/groups?format=json', { headers: { 'OCS-APIREQUEST': 'true', requesttoken: OC.requestToken } });
+      return (await r.json()).ocs?.data?.groups || [];
+    } catch (e) { return []; }
+  }
+  async function nouvelArbre() {
+    const dlg = $('#lg-nouvel-arbre'), f = $('#lg-form-nouvel-arbre');
+    f.reset();
+    const groupes = await mesGroupes();
+    $('#lg-nouvel-arbre-groupes').innerHTML = groupes.length
+      ? groupes.map(g => `<label><input type="checkbox" name="groupe" value="${echapper(g)}" ${g === 'famille' ? 'checked' : ''}> ${echapper(g)}</label>`).join('')
+      : '<span class="lg-aide">Aucun groupe : l\'arbre restera privé (vous pourrez le partager plus tard).</span>';
+    dlg.onclose = async () => {
+      if (dlg.returnValue !== 'ok' || !f.nom.value.trim()) return;
+      try {
+        const cree = await api('POST', '/trees', { name: f.nom.value.trim() });
+        for (const c of f.querySelectorAll('input[name="groupe"]:checked'))
+          await api('POST', `/trees/${cree.id}/shares`, { share_type: 'group', share_with: c.value, permission: 'edit' });
+        arbres = await api('GET', '/trees'); remplirChoix(cree.id); fermerFiche();
+        await chargerArbre(cree.id); toast(`Arbre « ${cree.name} » créé`);
+      } catch (err) { erreur(err); }
+    };
+    dlg.showModal(); f.nom.focus();
+  }
+  async function partager() {
+    if (!estProprietaire) { toast("Seul le propriétaire de l'arbre peut le partager"); return; }
+    const dlg = $('#lg-partage'), f = $('#lg-form-partage');
+    $('#lg-partage-titre').textContent = `Partager « ${arbre.name} »`;
+    const afficher = () => {
+      $('#lg-partages').innerHTML = partages.length ? partages.map(sh => `<div class="lg-partage"><span>${sh.share_type === 'group' ? 'Groupe' : 'Utilisateur'} <strong>${echapper(sh.share_with)}</strong>
+        <small>· ${sh.permission === 'edit' ? 'peut modifier' : 'peut voir'}</small></span><button type="button" class="lg-delier" data-partage="${sh.id}" title="Retirer ce partage">✕</button></div>`).join('')
+        : '<p class="lg-aide">Cet arbre n\'est partagé avec personne.</p>';
+    };
+    afficher();
+    const groupes = await mesGroupes();
+    f.groupe.innerHTML = groupes.map(g => `<option value="${echapper(g)}">${echapper(g)}</option>`).join('') || '<option value="">Aucun groupe</option>';
+    const rafraichir = async () => { const r = await api('GET', `/trees/${arbre.id}`); partages = r.shares || []; afficher(); };
+    $('#lg-partage-ajouter').onclick = async () => {
+      if (!f.groupe.value) return;
+      try { await api('POST', `/trees/${arbre.id}/shares`, { share_type: 'group', share_with: f.groupe.value, permission: f.droit.value }); await rafraichir(); toast('Partage enregistré'); }
+      catch (err) { erreur(err); }
+    };
+    $('#lg-partages').onclick = async e => {
+      const b = e.target.closest('[data-partage]'); if (!b || !confirm('Retirer ce partage ?')) return;
+      try { await api('DELETE', `/shares/${b.dataset.partage}`); await rafraichir(); toast('Partage retiré'); } catch (err) { erreur(err); }
+    };
+    dlg.showModal();
   }
 
   // ---- Import GEDCOM : aperçu obligatoire, puis import confirmé par l'empreinte du fichier
@@ -610,7 +721,13 @@
     };
 
     $('#lg-fermer').onclick = fermerFiche;
-    $('#lg-voir-lignee').onclick = e => { const id = choisi; changerLignee(e.currentTarget.dataset.cle, id); ouvrirFiche(id); };
+    $('#lg-voir-lignee').onclick = e => {
+      const b = e.currentTarget, id = choisi;
+      if (b.dataset.arbre) allerVers(b.dataset.arbre, b.dataset.personne).catch(erreur);
+      else { changerLignee(b.dataset.cle, id); ouvrirFiche(id); }
+    };
+    $('#lg-nouvel-arbre-btn').onclick = () => nouvelArbre();
+    $('#lg-partage-btn').onclick = () => partager();
     $('#lg-choix-lignee').onchange = e => { fermerFiche(); changerLignee(e.target.value, famille?.selection); };
     document.querySelectorAll('.lg-onglets button').forEach(b => { b.onclick = () => {
       document.querySelectorAll('.lg-onglets button').forEach(x => x.classList.toggle('lg-actif', x === b));
@@ -618,6 +735,7 @@
     }; });
     $('#lg-onglet-liens').onclick = e => {
       const x = e.target.closest('.lg-delier'); if (x) { delier(x); return; }
+      const ar = e.target.closest('[data-arbre]'); if (ar) { allerVers(ar.dataset.arbre, ar.dataset.personne).catch(erreur); return; }
       const b = e.target.closest('[data-id]'); if (b) { centrer(b.dataset.id); ouvrirFiche(b.dataset.id); }
     };
     $('#lg-form-relier').type.onchange = preparerRelier;
@@ -626,6 +744,7 @@
       if (a === 'centrer') centrer(choisi);
       else if (a === 'supprimer') supprimer();
       else if (a === 'relier') relier();
+      else if (a === 'pont') pont();
       else ajouter(a);
     };
     $('#lg-photo').onchange = e => { envoyerPhoto(e.target.files[0]); e.target.value = ''; };
