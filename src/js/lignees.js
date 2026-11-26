@@ -50,6 +50,8 @@
   // Deux vues : « famille » (tout l'arbre, placement maison) et « centree » (family-chart autour d'une personne).
   let mode = preferences().vue === 'centree' ? 'centree' : 'famille';
   let disposition = null, famille = null; // famille = { conteneur, monde, zoom, selection }
+  // Lignées : la vue famille n'affiche qu'une lignée à la fois (avec les conjoints venus d'ailleurs), ou toutes.
+  let complet = null, ligneesNommees = [], ligneeAffichee = null;
   const parId = id => donnees.find(d => d.id === String(id));
   const personne = id => personnes.find(p => String(p.id) === String(id));
 
@@ -88,13 +90,61 @@
     calculerDisposition();
   }
 
-  // Placement « toute la famille » (js/vue-complete.js) ; il fournit aussi les générations des deux vues.
+  // Placement (js/vue-complete.js). Le calcul sur tout l'arbre fournit les lignées et les générations des deux vues.
+  const versModule = d => ({ id: d.id, naissance: d.data.birthday, genre: d.data.gender });
+  const lienModule = l => ({ type: l.type, de: l.person1_id, vers: l.person2_id });
+  function nomLignee(l) {
+    // Nom le plus porté par les descendants de la lignée (ceux qui y ont leurs parents), sinon celui de la racine.
+    const compte = new Map();
+    for (const id of l.membres) {
+      const d = parId(id); if (!d?.rels.parents.length) continue;
+      const n = (d.data['last name'] || '').trim(); if (n) compte.set(n.toUpperCase(), (compte.get(n.toUpperCase()) || 0) + 1);
+    }
+    const brut = [...compte].sort((a, b) => b[1] - a[1])[0]?.[0] || parId(l.racine[0])?.data['last name'] || parId(l.racine[0])?.data['first name'] || '?';
+    return brut.toLowerCase().replace(/(^|[\s-])\S/g, c => c.toUpperCase());
+  }
   function calculerDisposition() {
-    disposition = donnees.length ? LigneesVueComplete.calculer(
-      donnees.map(d => ({ id: d.id, naissance: d.data.birthday, genre: d.data.gender })),
-      liens.map(l => ({ type: l.type, de: l.person1_id, vers: l.person2_id })),
-      { reference: personneMoi() }) : null;
-    donnees.forEach(d => { d.data._generation = disposition?.cartes.get(d.id)?.gen || 1; });
+    if (!donnees.length) { complet = disposition = null; ligneesNommees = []; remplirLignees(); return; }
+    complet = LigneesVueComplete.calculer(donnees.map(versModule), liens.map(lienModule), { reference: personneMoi() });
+    donnees.forEach(d => { d.data._generation = complet.cartes.get(d.id)?.gen || 1; });
+    ligneesNommees = complet.lignees.filter(l => l.membres.length >= 2).map(l => ({ ...l, nom: nomLignee(l) }));
+    const existe = cle => ligneesNommees.some(l => l.cle === cle);
+    if (ligneeAffichee === null) ligneeAffichee = preferences()['lignee-' + arbre?.id] ?? null;
+    if (ligneeAffichee !== 'toutes' && !existe(ligneeAffichee)) ligneeAffichee = complet.cleDe.get(personneMoi());
+    if (ligneesNommees.length < 2 || (ligneeAffichee !== 'toutes' && !existe(ligneeAffichee))) ligneeAffichee = 'toutes';
+    disposition = dispositionLignee(ligneeAffichee);
+    majGenerations();
+    remplirLignees();
+  }
+  // Générations de la vue affichée (la plus ancienne génération visible est la I).
+  function majGenerations() {
+    donnees.forEach(d => { d.data._generation = disposition?.cartes.get(d.id)?.gen || complet?.cartes.get(d.id)?.gen || 1; });
+  }
+  // Une lignée : ses membres et leurs conjoints, sans les parents de ces conjoints (qui sont dans leur propre lignée).
+  function dispositionLignee(cle) {
+    if (cle === 'toutes') return complet;
+    const membres = new Set(ligneesNommees.find(l => l.cle === cle).membres), visibles = new Set(membres);
+    for (const id of membres) for (const c of parId(id).rels.spouses) visibles.add(c);
+    const ls = liens.filter(l => visibles.has(String(l.person1_id)) && visibles.has(String(l.person2_id))
+      && !(l.type === 'parent' && !membres.has(String(l.person2_id))));
+    return LigneesVueComplete.calculer(donnees.filter(d => visibles.has(d.id)).map(versModule), ls.map(lienModule), { reference: personneMoi() });
+  }
+  const cleOuToutes = id => { const c = complet?.cleDe.get(String(id)); return ligneesNommees.some(l => l.cle === c) ? c : 'toutes'; };
+  function remplirLignees() {
+    const s = $('#lg-choix-lignee');
+    s.hidden = ligneesNommees.length < 2;
+    s.innerHTML = ligneesNommees.map(l => `<option value="${echapper(l.cle)}">Lignée ${echapper(l.nom)}</option>`).join('')
+      + '<option value="toutes">Toutes les lignées</option>';
+    s.value = ligneeAffichee || 'toutes';
+  }
+  function changerLignee(cle, idSelection) {
+    ligneeAffichee = cle; retenir('lignee-' + arbre.id, cle);
+    disposition = dispositionLignee(cle); majGenerations(); remplirLignees();
+    if (mode !== 'famille') { mode = 'famille'; retenir('vue', mode); $('#lg-vue .lg-texte').textContent = 'Vue centrée'; }
+    dessiner(idSelection);
+    if (idSelection) centrerFamille(idSelection, undefined, 0);
+    const l = ligneesNommees.find(x => x.cle === cle);
+    toast(l ? `Lignée ${l.nom}` : 'Toutes les lignées');
   }
   // Personne au centre (vue centrée) ou sélectionnée (vue famille).
   function idCentre() { return mode === 'centree' ? graphique?.store.getMainId() : famille?.selection; }
@@ -178,7 +228,8 @@
     }
     svg.innerHTML = traces;
     for (const d of donnees) {
-      const q = c(d.id), el = document.createElement('div');
+      const q = c(d.id); if (!q) continue; // personne d'une autre lignée
+      const el = document.createElement('div');
       el.className = 'lg-place'; el.dataset.id = d.id;
       el.style.left = (q.x - LC / 2) + 'px'; el.style.top = (q.y - HC / 2) + 'px';
       el.innerHTML = carte({ data: d });
@@ -187,7 +238,9 @@
     const zoom = d3.zoom().scaleExtent([0.12, 2.5])
       .on('zoom', e => { monde.style.transform = `translate(${e.transform.x}px,${e.transform.y}px) scale(${e.transform.k})`; mettreAJourZoom(); });
     const sel = d3.select(conteneur).call(zoom).on('dblclick.zoom', null);
-    famille = { conteneur, monde, zoom, selection: parId(idCentre) ? String(idCentre) : personneMoi() };
+    const visible = id => id && disposition.cartes.has(String(id));
+    const moi = personneMoi();
+    famille = { conteneur, monde, zoom, selection: visible(idCentre) ? String(idCentre) : visible(moi) ? moi : [...disposition.cartes.keys()][0] };
     conteneur.onclick = e => { const el = e.target.closest('.lg-place'); if (el) { selectionner(el.dataset.id); ouvrirFiche(el.dataset.id); } };
     marquerSelection();
     if (transformation) sel.call(zoom.transform, transformation);
@@ -248,6 +301,7 @@
     mettreAJourStats();
   }
   function centrer(id) {
+    if (mode === 'famille' && !disposition?.cartes.has(String(id))) { changerLignee(cleOuToutes(id), String(id)); return; }
     if (mode === 'famille') { selectionner(id); centrerFamille(id); return; }
     if (!graphique) return;
     graphique.updateMainId(String(id)); graphique.updateTree({ tree_position: 'main_to_middle' });
@@ -256,6 +310,7 @@
 
   async function chargerArbre(id, idCentre, transformation) {
     const r = await api('GET', `/trees/${id}`);
+    if (arbre?.id !== r.tree.id) ligneeAffichee = null;
     arbre = r.tree; personnes = r.people || []; liens = r.relationships || [];
     peutModifier = !!r.canEdit;
     racine().classList.toggle('lg-lecture-seule', !peutModifier);
@@ -281,6 +336,10 @@
     m.innerHTML = medaillon(p); m.className = 'lg-medaillon lg-' + p.gender;
     $('#lg-fiche-generation').textContent = 'Génération ' + romain(p._generation);
     $('#lg-fiche-nom').textContent = `${p['first name']} ${p['last name'] || ''}`.trim();
+    const autre = mode === 'famille' && ligneeAffichee !== 'toutes' ? ligneesNommees.find(l => l.cle === complet?.cleDe.get(String(id)) && l.cle !== ligneeAffichee) : null;
+    const bv = $('#lg-voir-lignee');
+    bv.hidden = !autre;
+    if (autre) { bv.textContent = `Voir sa lignée : ${autre.nom}`; bv.dataset.cle = autre.cle; }
     const f = $('#lg-onglet-identite');
     for (const champ of ['given_name', 'surname', 'birth_surname', 'birth_place', 'death_place', 'occupation', 'notes']) f[champ].value = brut[champ] || '';
     f.gender.value = brut.gender === 'female' ? 'female' : brut.gender === 'male' ? 'male' : '';
@@ -551,6 +610,8 @@
     };
 
     $('#lg-fermer').onclick = fermerFiche;
+    $('#lg-voir-lignee').onclick = e => { const id = choisi; changerLignee(e.currentTarget.dataset.cle, id); ouvrirFiche(id); };
+    $('#lg-choix-lignee').onchange = e => { fermerFiche(); changerLignee(e.target.value, famille?.selection); };
     document.querySelectorAll('.lg-onglets button').forEach(b => { b.onclick = () => {
       document.querySelectorAll('.lg-onglets button').forEach(x => x.classList.toggle('lg-actif', x === b));
       for (const o of ['identite', 'liens', 'actions']) $('#lg-onglet-' + o).hidden = o !== b.dataset.onglet;

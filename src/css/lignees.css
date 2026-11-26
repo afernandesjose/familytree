@@ -98,6 +98,12 @@
 #lignees .lg-logo { width: 36px; height: 36px; border-radius: 12px; border: 1px solid var(--or); color: var(--accent); display: grid; place-items: center; flex: none; }
 #lignees #lg-choix-arbre { font-size: 24px; font-weight: 700; border: none; background: transparent; padding: 0 4px 0 0; height: auto; max-width: 46vw; cursor: pointer; }
 #lignees #lg-choix-arbre option { font: 14px "Plus Jakarta Sans", sans-serif; color: #241d14; }
+#lignees .lg-choix-lignee { margin-top: 6px; padding: 3px 26px 3px 10px; border-radius: 999px; border: 1px solid var(--or); background-color: rgba(198,150,56,.1);
+  color: var(--accent); font-size: 12px; font-weight: 600; height: auto; min-height: 0; cursor: pointer; max-width: 100%; }
+#lignees .lg-choix-lignee option { color: #241d14; background: #fff; }
+#lignees .lg-voir-lignee { margin-top: 8px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--or); color: var(--accent);
+  font-size: 12px; font-weight: 600; background: rgba(198,150,56,.1); }
+#lignees .lg-voir-lignee:hover { background: rgba(198,150,56,.2); }
 #lignees .lg-stats { font-size: 11px; color: var(--texte-3); letter-spacing: .3px; }
 #lignees .lg-outils { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
 #lignees .lg-bouton { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }

@@ -21,6 +21,7 @@ Util::addScript('lignees', 'lignees');
       <div class="lg-titre-texte">
         <select id="lg-choix-arbre" class="lg-serif" title="Changer d'arbre"></select>
         <div class="lg-stats" id="lg-stats">Chargement…</div>
+        <select id="lg-choix-lignee" class="lg-choix-lignee" title="Changer de lignée" hidden></select>
       </div>
     </div>
     <div class="lg-outils">
@@ -58,7 +59,8 @@ Util::addScript('lignees', 'lignees');
   <aside class="lg-panneau lg-fiche" id="lg-fiche">
     <div class="lg-fiche-entete">
       <div class="lg-medaillon" id="lg-fiche-medaillon"></div>
-      <div class="lg-fiche-nom"><span class="lg-badge" id="lg-fiche-generation"></span><h2 class="lg-serif" id="lg-fiche-nom"></h2></div>
+      <div class="lg-fiche-nom"><span class="lg-badge" id="lg-fiche-generation"></span><h2 class="lg-serif" id="lg-fiche-nom"></h2>
+        <button class="lg-voir-lignee" id="lg-voir-lignee" hidden></button></div>
       <button class="lg-fermer" id="lg-fermer" title="Fermer">✕</button>
     </div>
     <div class="lg-onglets">

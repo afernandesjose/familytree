@@ -10,7 +10,8 @@
  *  - la hauteur dépend de la génération (conjoints alignés), donc deux lignées alliées restent de niveau.
  *
  * Entrée : personnes [{id, naissance}] et liens [{type: 'parent'|'partner', de, vers}] (parent : de = parent, vers = enfant).
- * Sortie : { cartes: Map(id → {x, y, gen}), couples: [{a, b}], familles: [{parents: [...], enfants: [...]}], largeur, hauteur }.
+ * Sortie : { cartes: Map(id → {x, y, gen}), couples: [{a, b}], familles: [{parents: [...], enfants: [...]}], largeur, hauteur,
+ *           lignees: [{cle, racine, membres}], cleDe: Map(id → clé de lignée) }.
  */
 (function () {
   'use strict';
@@ -200,7 +201,15 @@
       familles.get(k).enfants.push(i);
     }
     const toutes = [...cartes.values()];
+    // Lignées : identifiées par les membres de leur racine (stable d'un chargement à l'autre).
+    const lignees = ordre.map(n => ({
+      cle: [...racines[n].membres].sort().join('+'),
+      racine: [...racines[n].membres],
+      membres: ids.filter(i => ligneeDe(i) === n),
+    }));
+    const cleDe = new Map(ids.map(i => [i, lignees[ordre.indexOf(ligneeDe(i))].cle]));
     return {
+      lignees, cleDe,
       cartes, couples, familles: [...familles.values()],
       largeur: Math.max(...toutes.map(c => c.x)) + L / 2, hauteur: Math.max(...toutes.map(c => c.y)) + H / 2,
       generations: Math.max(...toutes.map(c => c.gen)),
