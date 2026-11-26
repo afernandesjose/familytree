@@ -35,7 +35,7 @@ A family tree app for Nextcloud, forked from [hacesoft's FamilyTree](https://git
 - Birthdays feed a Nextcloud calendar
 - Keeps FamilyTree's data, sharing, history, photos and GEDCOM 7 import/export</description>
 
-    <version>2.6.0</version>
+    <version>2.6.1</version>
     <licence>AGPL-3.0-or-later</licence>
     <author homepage="https://github.com/afernandesjose">Arnaldo Fernandes José</author>
     <author homepage="https://github.com/hacesoft">hacesoft</author>
@@ -55,7 +55,7 @@ A family tree app for Nextcloud, forked from [hacesoft's FamilyTree](https://git
             <namespace>Lignees</namespace>
             <route>lignees.page.index</route>
             <order>30</order>
-            <icon>app.svg</icon>
+            <icon>arbre.svg</icon>
         </navigation>
     </navigations>
 </info>
