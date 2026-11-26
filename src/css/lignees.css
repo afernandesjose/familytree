@@ -115,6 +115,8 @@
 #lignees .lg-voir-lignee { margin-top: 8px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--or); color: var(--accent);
   font-size: 12px; font-weight: 600; background: rgba(198,150,56,.1); }
 #lignees .lg-voir-lignee:hover { background: rgba(198,150,56,.2); }
+#lignees .lg-zodiaque { color: var(--accent); font-size: 11.5px; margin-left: 3px; }
+#lignees .lg-signe { display: inline-block; margin-top: 4px; font-size: 12.5px; color: var(--texte-2); }
 #lignees .lg-stats { font-size: 11px; color: var(--texte-3); letter-spacing: .3px; }
 #lignees .lg-outils { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
 #lignees .lg-bouton { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }

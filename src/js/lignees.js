@@ -29,6 +29,19 @@
     return m ? `${+m[3]} ${MOIS[m[2] - 1]} ${m[1]}` : annee(v);
   }
 
+  // ---- Signe astrologique (zodiaque tropical, dates usuelles) d'après le jour et le mois de naissance
+  const SIGNES = [ // [mois, dernier jour du signe qui finit ce mois-là, signe, symbole]
+    [1, 19, 'Capricorne', '♑'], [2, 18, 'Verseau', '♒'], [3, 20, 'Poissons', '♓'], [4, 19, 'Bélier', '♈'],
+    [5, 20, 'Taureau', '♉'], [6, 20, 'Gémeaux', '♊'], [7, 22, 'Cancer', '♋'], [8, 22, 'Lion', '♌'],
+    [9, 22, 'Vierge', '♍'], [10, 22, 'Balance', '♎'], [11, 21, 'Scorpion', '♏'], [12, 21, 'Sagittaire', '♐'],
+  ];
+  function signe(valeur) {
+    const m = /^\d{4}-(\d{2})-(\d{2})$/.exec(versIso(valeur)); if (!m) return null;
+    const mois = +m[1], jour = +m[2], k = SIGNES.findIndex(([mo]) => mo === mois);
+    const [, fin, nom, symbole] = jour <= SIGNES[k][1] ? SIGNES[k] : SIGNES[(k + 1) % 12];
+    void fin; return { nom, symbole };
+  }
+
   // ---- Préférences locales (thème, dernière personne affichée) : simple confort, jamais indispensable
   function preferences() { try { return JSON.parse(localStorage.getItem(STOCKAGE)) || {}; } catch (e) { return {}; } }
   function retenir(cle, valeur) { try { const p = preferences(); p[cle] = valeur; localStorage.setItem(STOCKAGE, JSON.stringify(p)); } catch (e) { /* stockage indisponible */ } }
@@ -185,7 +198,7 @@
       <span class="lg-generation">${romain(p._generation)}</span>${ponts.has(d.data.id) ? `<span class="lg-pont-carte" title="Aussi dans : ${ponts.get(d.data.id).map(x => '« ' + echapper(x.cible.tree_name) + ' »').join(', ')}">🔗</span>` : ''}
       <div class="lg-haut"><div class="lg-medaillon">${medaillon(p)}</div>
         <div class="lg-identite"><div class="lg-prenom">${echapper(p['first name'])}</div><div class="lg-nom">${echapper(p['last name'])}</div></div></div>
-      <div class="lg-bas"><span>${echapper(p.occupation || (p.place || '').split(',')[0])}</span><span>${dates}</span></div>
+      <div class="lg-bas"><span>${echapper(p.occupation || (p.place || '').split(',')[0])}</span><span>${dates}${(z => z ? ` <span class="lg-zodiaque" title="${z.nom}">${z.symbole}</span>` : '')(signe(p.birthday))}</span></div>
     </div>`;
   }
 
@@ -417,6 +430,9 @@
     m.innerHTML = medaillon(p); m.className = 'lg-medaillon lg-' + p.gender;
     $('#lg-fiche-generation').textContent = 'Génération ' + romain(p._generation);
     $('#lg-fiche-nom').textContent = `${p['first name']} ${p['last name'] || ''}`.trim();
+    const z = signe(p.birthday);
+    $('#lg-fiche-signe').hidden = !z;
+    if (z) $('#lg-fiche-signe').textContent = `${z.symbole} ${z.nom}`;
     // Avec plusieurs ponts, le bouton suit le plus récent ; l'onglet Liens les liste tous.
     const pont = (ponts.get(String(id)) || []).reduce((r, x) => (!r || Number(x.id) > Number(r.id) ? x : r), null);
     const autre = !pont && mode === 'famille' && ligneeAffichee !== 'toutes' ? ligneesNommees.find(l => l.cle === complet?.cleDe.get(String(id)) && l.cle !== ligneeAffichee) : null;

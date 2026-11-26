@@ -345,6 +345,7 @@ final class AnniversairesService {
             'DTEND;VALUE=DATE:' . $oDebut->modify('+1 day')->format('Ymd'),
             'RRULE:' . $sRegle,
             'SUMMARY:' . self::texte($sTitre),
+            'DESCRIPTION:' . self::texte('Signe : ' . self::signe($nM, $nJ)),
             'TRANSP:TRANSPARENT',
             'CATEGORIES:' . ($bDecede ? 'Mémoire' : 'Anniversaire'),
         ];
@@ -353,6 +354,15 @@ final class AnniversairesService {
         }
         array_push($aLignes, 'END:VEVENT', 'END:VCALENDAR');
         return implode("\r\n", array_map([self::class, 'plier'], $aLignes)) . "\r\n";
+    }
+
+    /** Signe astrologique (mêmes dates que js/lignees.js). */
+    public static function signe(int $nMois, int $nJour): string {
+        $aSignes = [[1, 19, 'Capricorne ♑'], [2, 18, 'Verseau ♒'], [3, 20, 'Poissons ♓'], [4, 19, 'Bélier ♈'],
+            [5, 20, 'Taureau ♉'], [6, 20, 'Gémeaux ♊'], [7, 22, 'Cancer ♋'], [8, 22, 'Lion ♌'],
+            [9, 22, 'Vierge ♍'], [10, 22, 'Balance ♎'], [11, 21, 'Scorpion ♏'], [12, 21, 'Sagittaire ♐']];
+        $k = $nMois - 1;
+        return $nJour <= $aSignes[$k][1] ? $aSignes[$k][2] : $aSignes[($k + 1) % 12][2];
     }
 
     /** Échappement d'un texte iCalendar (RFC 5545, 3.3.11). */

@@ -68,6 +68,7 @@ Util::addScript('lignees', 'lignees');
     <div class="lg-fiche-entete">
       <div class="lg-medaillon" id="lg-fiche-medaillon"></div>
       <div class="lg-fiche-nom"><span class="lg-badge" id="lg-fiche-generation"></span><h2 class="lg-serif" id="lg-fiche-nom"></h2>
+        <span class="lg-signe" id="lg-fiche-signe" hidden></span>
         <button class="lg-voir-lignee" id="lg-voir-lignee" hidden></button></div>
       <button class="lg-fermer" id="lg-fermer" title="Fermer">✕</button>
     </div>
