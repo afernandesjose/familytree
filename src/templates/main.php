@@ -21,6 +21,7 @@ Util::addScript('lignees', 'lignees');
       <div class="lg-titre-texte">
         <select id="lg-choix-arbre" class="lg-serif" title="Changer d'arbre"></select>
         <div class="lg-stats" id="lg-stats">Chargement…</div>
+        <div class="lg-etat-partage" id="lg-etat-partage"></div>
         <div class="lg-ligne-lignee">
           <select id="lg-choix-lignee" class="lg-choix-lignee" title="Changer de lignée" hidden></select>
           <button class="lg-bouton-theme" id="lg-theme-lignee" title="Thème royal de la lignée" hidden><span class="lg-pastille" id="lg-pastille-theme"></span>Thème</button>
@@ -49,6 +50,7 @@ Util::addScript('lignees', 'lignees');
           <button id="lg-theme"><span>Changer de thème</span><span class="lg-pastille-theme" id="lg-nom-theme">Parchemin</span></button>
           <button id="lg-nouvel-arbre-btn"><span>Nouvel arbre…</span></button>
           <button id="lg-partage-btn"><span>Partager cet arbre…</span></button>
+          <button id="lg-affichage-btn"><span>Affichage…</span></button>
           <button id="lg-anniv-btn"><span>Mes anniversaires…</span></button>
           <button id="lg-parametres-btn"><span>Paramètres de l'arbre…</span></button>
           <button id="lg-import-ged"><span>Importer un fichier GEDCOM</span></button>
@@ -134,8 +136,10 @@ Util::addScript('lignees', 'lignees');
     <form method="dialog" class="lg-champs" id="lg-form-partage">
       <h3 class="lg-serif" id="lg-partage-titre">Partager cet arbre</h3>
       <div class="lg-liste-partages" id="lg-partages"></div>
-      <div class="lg-ligne2"><div><label>Groupe</label><select name="groupe"></select></div>
+      <div class="lg-ligne2"><div><label>Partager avec</label><select name="type"><option value="group">Un groupe</option><option value="user">Une personne</option></select></div>
         <div><label>Droits</label><select name="droit"><option value="edit">Modifier</option><option value="view">Voir seulement</option></select></div></div>
+      <div id="lg-partage-groupe"><label>Groupe</label><select name="groupe"></select></div>
+      <div id="lg-partage-personne" hidden><label>Personne (nom ou identifiant Nextcloud)</label><input name="personne" list="lg-partage-suggestions" autocomplete="off"><datalist id="lg-partage-suggestions"></datalist></div>
       <div class="lg-dialogue-boutons"><button value="annuler" formnovalidate>Fermer</button><button type="button" class="lg-enregistrer" id="lg-partage-ajouter">Partager</button></div>
     </form>
   </dialog>
@@ -166,6 +170,16 @@ Util::addScript('lignees', 'lignees');
       </div>
       <p class="lg-aide">Ces réglages valent pour tous ceux qui voient cet arbre ; seuls ceux qui peuvent le modifier peuvent les changer.</p>
       <div class="lg-dialogue-boutons"><button value="annuler" formnovalidate>Annuler</button><button type="button" class="lg-enregistrer" id="lg-parametres-ok">Enregistrer</button></div>
+    </form>
+  </dialog>
+  <dialog id="lg-affichage" class="lg-panneau">
+    <form method="dialog" class="lg-champs" id="lg-form-affichage">
+      <h3 class="lg-serif">Affichage</h3>
+      <div class="lg-cases"><label><input type="checkbox" name="signe"> Afficher le signe astrologique</label></div>
+      <h4 class="lg-section">Arbres affichés dans ma liste</h4>
+      <div class="lg-cases" id="lg-affichage-arbres"></div>
+      <p class="lg-aide">Réglages personnels, retrouvés sur tous vos appareils. Masquer un arbre ne le supprime pas et ne change pas son partage.</p>
+      <div class="lg-dialogue-boutons"><button value="annuler" formnovalidate>Annuler</button><button type="button" class="lg-enregistrer" id="lg-affichage-ok">Enregistrer</button></div>
     </form>
   </dialog>
   <dialog id="lg-anniv" class="lg-panneau">

@@ -80,7 +80,8 @@
   let complet = null, ligneesNommees = [], ligneeAffichee = null;
   // Ponts vers d'autres arbres : id de personne → [{id, cible: {id, tree_id, tree_name, ...}, canDelete}]
   let ponts = new Map(), partages = [], estProprietaire = false, evenements = [];
-  let parametresArbre = {}; // anniversaires, deces, rappel, lignee_conjoint, agenda…
+  let parametresArbre = {};
+  let affichage = { signe: true, arbres_masques: [] }, acces = null; // réglages personnels d'affichage ; accès à l'arbre affiché // anniversaires, deces, rappel, lignee_conjoint, agenda…
   const parId = id => donnees.find(d => d.id === String(id));
   const personne = id => personnes.find(p => String(p.id) === String(id));
 
@@ -392,7 +393,8 @@
     const r = await api('GET', `/trees/${id}`);
     if (arbre?.id !== r.tree.id) ligneeAffichee = null;
     arbre = r.tree; personnes = r.people || []; liens = r.relationships || [];
-    partages = r.shares || []; estProprietaire = !!r.isOwner; evenements = r.events || [];
+    partages = r.shares || []; estProprietaire = !!r.isOwner; evenements = r.events || []; acces = r.access || null;
+    afficherEtatPartage();
     ponts = new Map();
     try {
       for (const pt of await api('GET', `/trees/${id}/passerelles`)) {
@@ -656,12 +658,51 @@
     };
     dlg.showModal(); f.nom.focus();
   }
+  function afficherEtatPartage() {
+    const e = $('#lg-etat-partage'); if (!e || !arbre) return;
+    const droit = p => p === 'edit' ? 'modification' : 'lecture';
+    if (estProprietaire) {
+      e.textContent = partages.length
+        ? '👥 Partagé avec ' + partages.map(sh => `${sh.share_type === 'group' ? sh.share_with : (sh.libelle || sh.share_with)} (${droit(sh.permission)})`).join(', ')
+        : '🔒 Privé : visible par vous seul';
+    } else if (acces) {
+      e.textContent = `👥 Arbre de ${acces.ownerDisplayName}, partagé avec vous (${acces.role === 'viewer' ? 'lecture' : 'modification'})`;
+    } else e.textContent = '';
+  }
+  async function suggestionsPersonnes(texte) {
+    try {
+      const r = await fetch(OC.linkToOCS('apps/files_sharing/api/v1', 2) + 'sharees?format=json&itemType=file&perPage=10&shareType[]=0&search=' + encodeURIComponent(texte),
+        { headers: { 'OCS-APIREQUEST': 'true', requesttoken: OC.requestToken } });
+      const d = (await r.json()).ocs?.data || {};
+      return [...(d.exact?.users || []), ...(d.users || [])].map(u => ({ uid: u.value.shareWith, nom: u.label }));
+    } catch (e) { return []; }
+  }
+  async function reglagesAffichage() {
+    const dlg = $('#lg-affichage'), f = $('#lg-form-affichage');
+    f.signe.checked = affichage.signe;
+    $('#lg-affichage-arbres').innerHTML = arbres.map(a => `<label><input type="checkbox" name="arbre" value="${a.id}" ${affichage.arbres_masques.includes(Number(a.id)) ? '' : 'checked'}>
+      <span>${echapper(a.name)} <small>· ${a.isOwner ? 'à vous' : 'partagé avec vous'} · ${a.people_count ?? '?'} pers.</small></span></label>`).join('');
+    $('#lg-affichage-ok').onclick = async () => {
+      const masques = [...f.querySelectorAll('input[name="arbre"]:not(:checked)')].map(c => Number(c.value));
+      if (masques.length >= arbres.length) { toast('Gardez au moins un arbre affiché'); return; }
+      try {
+        affichage = await api('PUT', '/affichage', { signe: f.signe.checked, arbres_masques: masques });
+        racine().classList.toggle('lg-sans-signe', !affichage.signe);
+        dlg.close();
+        if (affichage.arbres_masques.includes(Number(arbre.id))) { const a = arbresAffiches()[0]; remplirChoix(a.id); fermerFiche(); await chargerArbre(a.id); }
+        else remplirChoix(arbre.id);
+        toast('Affichage enregistré');
+      } catch (err) { erreur(err); }
+    };
+    dlg.showModal();
+  }
   async function partager() {
     if (!estProprietaire) { toast("Seul le propriétaire de l'arbre peut le partager"); return; }
     const dlg = $('#lg-partage'), f = $('#lg-form-partage');
     $('#lg-partage-titre').textContent = `Partager « ${arbre.name} »`;
     const afficher = () => {
-      $('#lg-partages').innerHTML = partages.length ? partages.map(sh => `<div class="lg-partage"><span>${sh.share_type === 'group' ? 'Groupe' : 'Utilisateur'} <strong>${echapper(sh.share_with)}</strong>
+      afficherEtatPartage();
+      $('#lg-partages').innerHTML = partages.length ? partages.map(sh => `<div class="lg-partage"><span>${sh.share_type === 'group' ? 'Groupe' : 'Personne'} <strong>${echapper(sh.share_type === 'group' ? sh.share_with : (sh.libelle || sh.share_with))}</strong>
         <small>· ${sh.permission === 'edit' ? 'peut modifier' : 'peut voir'}</small></span><button type="button" class="lg-delier" data-partage="${sh.id}" title="Retirer ce partage">✕</button></div>`).join('')
         : '<p class="lg-aide">Cet arbre n\'est partagé avec personne.</p>';
     };
@@ -669,9 +710,22 @@
     const groupes = await mesGroupes();
     f.groupe.innerHTML = groupes.map(g => `<option value="${echapper(g)}">${echapper(g)}</option>`).join('') || '<option value="">Aucun groupe</option>';
     const rafraichir = async () => { const r = await api('GET', `/trees/${arbre.id}`); partages = r.shares || []; afficher(); };
+    let personnes = [];
+    const majType = () => { $('#lg-partage-groupe').hidden = f.type.value !== 'group'; $('#lg-partage-personne').hidden = f.type.value !== 'user'; };
+    f.type.onchange = majType; f.type.value = 'group'; f.personne.value = ''; majType();
+    f.personne.oninput = async () => {
+      const t = f.personne.value.trim(); if (t.length < 2) return;
+      personnes = await suggestionsPersonnes(t);
+      $('#lg-partage-suggestions').innerHTML = personnes.map(x => `<option value="${echapper(x.nom)}">${echapper(x.uid)}</option>`).join('');
+    };
     $('#lg-partage-ajouter').onclick = async () => {
-      if (!f.groupe.value) return;
-      try { await api('POST', `/trees/${arbre.id}/shares`, { share_type: 'group', share_with: f.groupe.value, permission: f.droit.value }); await rafraichir(); toast('Partage enregistré'); }
+      let type = f.type.value, avec = f.groupe.value;
+      if (type === 'user') {
+        const t = f.personne.value.trim();
+        avec = (personnes.find(x => x.nom === t || x.uid === t) || { uid: t }).uid;
+      }
+      if (!avec) return;
+      try { await api('POST', `/trees/${arbre.id}/shares`, { share_type: type, share_with: avec, permission: f.droit.value }); f.personne.value = ''; await rafraichir(); toast('Partage enregistré'); }
       catch (err) { erreur(err); }
     };
     $('#lg-partages').onclick = async e => {
@@ -896,9 +950,13 @@
       apercuImport = null; bouton.textContent = "Voir l'aperçu";
     } finally { bouton.disabled = false; }
   }
+  const arbresAffiches = () => { const v = arbres.filter(a => !affichage.arbres_masques.includes(Number(a.id))); return v.length ? v : arbres; };
   function remplirChoix(idActif) {
     const choix = $('#lg-choix-arbre');
-    choix.innerHTML = arbres.map(a => `<option value="${a.id}">${echapper(a.name)}</option>`).join('');
+    const liste = arbresAffiches();
+    // L'arbre affiché reste dans la liste même s'il est masqué (on peut y arriver par un pont).
+    if (!liste.some(a => a.id == idActif)) { const a = arbres.find(x => x.id == idActif); if (a) liste.push(a); }
+    choix.innerHTML = liste.map(a => `<option value="${a.id}">${echapper(a.name)}</option>`).join('');
     choix.value = idActif;
   }
 
@@ -911,7 +969,9 @@
       if (!arbres.length) { $('#lg-stats').textContent = 'Aucun arbre'; dessiner(); return; }
       let depart = Number(preferences().arbre);
       try { const pr = await api('GET', '/preferences'); if (!arbres.some(a => a.id == depart)) depart = pr.startTreeId; } catch (e) { /* préférences facultatives */ }
-      if (!arbres.some(a => a.id == depart)) depart = arbres[0].id;
+      try { affichage = await api('GET', '/affichage'); } catch (e) { /* valeurs par défaut */ }
+      racine().classList.toggle('lg-sans-signe', !affichage.signe);
+      if (!arbresAffiches().some(a => a.id == depart)) depart = arbresAffiches()[0].id;
       remplirChoix(depart);
       chargerMesAnniversaires();
       await chargerArbre(depart);
@@ -988,6 +1048,7 @@
     $('#lg-partage-btn').onclick = () => partager();
     $('#lg-parametres-btn').onclick = () => parametres();
     $('#lg-anniv-btn').onclick = () => mesAnniversairesDialogue();
+    $('#lg-affichage-btn').onclick = () => reglagesAffichage();
     $('#lg-choix-lignee').onchange = e => { fermerFiche(); changerLignee(e.target.value, famille?.selection); };
     document.querySelectorAll('.lg-onglets button').forEach(b => { b.onclick = () => {
       document.querySelectorAll('.lg-onglets button').forEach(x => x.classList.toggle('lg-actif', x === b));
