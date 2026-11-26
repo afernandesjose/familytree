@@ -67,6 +67,7 @@
   let complet = null, ligneesNommees = [], ligneeAffichee = null;
   // Ponts vers d'autres arbres : id de personne → [{id, cible: {id, tree_id, tree_name, ...}, canDelete}]
   let ponts = new Map(), partages = [], estProprietaire = false, evenements = [];
+  let parametresArbre = {}; // anniversaires, deces, rappel, lignee_conjoint, agenda…
   const parId = id => donnees.find(d => d.id === String(id));
   const personne = id => personnes.find(p => String(p.id) === String(id));
 
@@ -384,6 +385,7 @@
       }
     } catch (e) { /* ponts facultatifs */ }
     try { themes = await api('GET', `/trees/${id}/themes`); } catch (e) { themes = {}; }
+    try { parametresArbre = await api('GET', `/trees/${id}/parametres`); } catch (e) { parametresArbre = {}; }
     peutModifier = !!r.canEdit;
     racine().classList.toggle('lg-lecture-seule', !peutModifier);
     personneDepart = r.tree.root_person_id;
@@ -402,6 +404,7 @@
     const cadrage = mode === 'famille' && famille ? d3.zoomTransform(famille.conteneur) : undefined;
     await chargerArbre(arbre.id, centre, cadrage);
     if (choisi && personne(choisi)) ouvrirFiche(choisi); else fermerFiche();
+    if (parametresArbre.anniversaires) api('POST', `/trees/${arbre.id}/anniversaires`).catch(() => {});
   }
 
   // ---- Fiche latérale
@@ -500,7 +503,10 @@
       } else {
         nouvelle = await api('POST', `/trees/${arbre.id}/people`, corpsPersonne(null, saisie));
         if (type === 'parent') await api('POST', `/trees/${arbre.id}/relationships`, { type: 'parent', person1_id: nouvelle.id, person2_id: Number(choisi) });
-        if (type === 'conjoint') await api('POST', `/trees/${arbre.id}/relationships`, { type: 'partner', person1_id: Number(choisi), person2_id: nouvelle.id });
+        if (type === 'conjoint') {
+          await api('POST', `/trees/${arbre.id}/relationships`, { type: 'partner', person1_id: Number(choisi), person2_id: nouvelle.id });
+          if (parametresArbre.lignee_conjoint) await arbrePourConjoint(nouvelle).catch(err => toast("Conjoint ajouté, mais l'arbre de sa famille n'a pas pu être créé : " + err.message));
+        }
       }
       await recharger(choisi || nouvelle.id);
       toast(`${saisie.given_name} a été ajouté${saisie.gender === 'female' ? 'e' : ''} à l'arbre`);
@@ -723,6 +729,53 @@
     dlg.showModal();
   }
 
+  // ---- Paramètres de l'arbre (anniversaires dans un agenda, lignée automatique des conjoints)
+  async function arbrePourConjoint(conjoint) {
+    const nomFamille = (conjoint.surname || conjoint.given_name || '').trim();
+    const nom = `Famille ${nomFamille.charAt(0).toUpperCase()}${nomFamille.slice(1).toLowerCase()}`;
+    const cree = await api('POST', '/trees', { name: nom });
+    for (const sh of partages.filter(x => x.share_type === 'group'))
+      await api('POST', `/trees/${cree.id}/shares`, { share_type: 'group', share_with: sh.share_with, permission: sh.permission });
+    const copie = await api('POST', `/trees/${cree.id}/people`, corpsPersonne(conjoint, { photo_url: '' }));
+    await api('POST', `/people/${conjoint.id}/passerelles`, { cible_id: copie.id });
+    arbres = await api('GET', '/trees'); remplirChoix(arbre.id);
+    toast(`Arbre « ${nom} » créé pour sa famille (bouton « Voir sa lignée » dans sa fiche)`);
+  }
+  async function parametres() {
+    const dlg = $('#lg-parametres'), f = $('#lg-form-parametres');
+    let p;
+    try { p = await api('GET', `/trees/${arbre.id}/parametres`); } catch (err) { erreur(err); return; }
+    $('#lg-parametres-titre').textContent = `Paramètres de « ${arbre.name} »`;
+    for (const k of ['anniversaires', 'deces', 'rappel', 'lignee_conjoint']) f[k].checked = !!p[k];
+    const options = p.mes_agendas.map(a => `<option value="${echapper(a.uri)}">${echapper(a.nom)}</option>`);
+    if (p.agenda_uri && !p.agenda_est_le_mien) options.unshift(`<option value="">Garder l'agenda de ${echapper(p.agenda_proprietaire)}</option>`);
+    options.push('<option value="nouveau">Nouvel agenda…</option>');
+    f.agenda_uri.innerHTML = options.join('');
+    f.agenda_uri.value = p.agenda_est_le_mien && p.agenda_uri ? p.agenda_uri : (p.agenda_uri ? '' : (p.mes_agendas[0]?.uri ?? 'nouveau'));
+    f.agenda_nom.value = `Anniversaires — ${arbre.name}`;
+    const maj = () => {
+      $('#lg-parametres-agenda').classList.toggle('lg-inactif', !f.anniversaires.checked);
+      f.agenda_nom.hidden = f.agenda_uri.value !== 'nouveau';
+      $('#lg-parametres-agenda-info').textContent = f.agenda_uri.value === ''
+        ? `Les anniversaires vont dans un agenda de ${p.agenda_proprietaire}.`
+        : 'Lignées n\'ajoute, ne modifie et ne retire que ses propres événements dans cet agenda.';
+    };
+    f.onchange = maj; maj();
+    [...f.elements].forEach(e => { if (e.name) e.disabled = !p.peut_modifier; });
+    $('#lg-parametres-ok').hidden = !p.peut_modifier;
+    $('#lg-parametres-ok').onclick = async () => {
+      const corps = { anniversaires: f.anniversaires.checked, deces: f.deces.checked, rappel: f.rappel.checked, lignee_conjoint: f.lignee_conjoint.checked };
+      if (f.anniversaires.checked && f.agenda_uri.value) { corps.agenda_uri = f.agenda_uri.value; corps.agenda_nom = f.agenda_nom.value.trim(); }
+      try {
+        const r = await api('PUT', `/trees/${arbre.id}/parametres`, corps);
+        parametresArbre = r.parametres; dlg.close();
+        const b = r.synchronisation;
+        toast(b.actif ? `Agenda à jour : ${b.ajoutes} ajouté(s), ${b.modifies} modifié(s), ${b.supprimes} retiré(s)` : 'Paramètres enregistrés');
+      } catch (err) { erreur(err); }
+    };
+    dlg.showModal();
+  }
+
   // ---- Import GEDCOM : aperçu obligatoire, puis import confirmé par l'empreinte du fichier
   let apercuImport = null;
   function reinitialiserImport() {
@@ -867,6 +920,7 @@
     $('#lg-palette').onclick = e => { e.stopPropagation(); const b = e.target.closest('[data-theme]'); if (b) choisirTheme(b.dataset.theme); };
     document.addEventListener('click', () => $('#lg-palette').classList.remove('lg-ouverte'));
     $('#lg-partage-btn').onclick = () => partager();
+    $('#lg-parametres-btn').onclick = () => parametres();
     $('#lg-choix-lignee').onchange = e => { fermerFiche(); changerLignee(e.target.value, famille?.selection); };
     document.querySelectorAll('.lg-onglets button').forEach(b => { b.onclick = () => {
       document.querySelectorAll('.lg-onglets button').forEach(x => x.classList.toggle('lg-actif', x === b));

@@ -27,7 +27,7 @@ final class GenealogyController extends Controller {
  * @param GenealogyService $oService Služba pro přístup ke genealogickým datům a ověřování oprávnění.
  * @return void Konstruktor nevrací návratovou hodnotu.
  */
-public function __construct(IRequest $oRequest, private GenealogyService $oService) { parent::__construct(Application::APP_ID, $oRequest); }
+public function __construct(IRequest $oRequest, private GenealogyService $oService, private \OCA\Lignees\Service\AnniversairesService $oAnniversaires) { parent::__construct(Application::APP_ID, $oRequest); }
     /**
  * @brief Vrátí statistiky jednoho přístupného rodokmenu.
  * @param int $treeId Identifikátor rodokmenu.
@@ -83,7 +83,12 @@ public function __construct(IRequest $oRequest, private GenealogyService $oServi
  * @param int $id Identifikátor cílového záznamu.
  * @return DataResponse HTTP odpověď s výslednými daty nebo chybovou zprávou ve formátu JSON.
  */
-    #[NoAdminRequired] public function deleteTree(int $id): DataResponse { return $this->oService->deleteTree($id); }
+    #[NoAdminRequired] public function deleteTree(int $id): DataResponse {
+        // Une fois l'arbre supprimé (le service vérifie que c'est son propriétaire), ses anniversaires quittent l'agenda.
+        $oReponse = $this->oService->deleteTree($id);
+        if ($oReponse->getStatus() === 200) $this->oAnniversaires->supprimer($id);
+        return $oReponse;
+    }
     /** @brief Bezpečně předá úplný rodokmen novému vlastníkovi v Nextcloudu.
      * @param int $id ID rodokmenu.
      * @return DataResponse Výsledek převodu.

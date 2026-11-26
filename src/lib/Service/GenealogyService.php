@@ -1260,4 +1260,7 @@ fn($nA,$aB)=>(int)$aB['updated_at']<=>(int)$nA['updated_at']);return new DataRes
    $this->oConfig->setAppValue('lignees', 'themes_' . $nTreeId, json_encode($aThemes, JSON_THROW_ON_ERROR));
    return new DataResponse($aThemes);
   }
+
+  /** Droit de voir (ou de modifier) un arbre, pour les autres contrôleurs de l'application. */
+  public function peut(int $nTreeId, bool $bModifier = false): bool { return $this->can($nTreeId, $bModifier); }
 }
