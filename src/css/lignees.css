@@ -198,8 +198,10 @@
 #lignees .lg-enregistrer:disabled { opacity: .55; cursor: wait; }
 #lignees .lg-cases { display: grid; gap: 6px; }
 #lignees .lg-section { margin: 8px 0 0; font: 600 11px/1.3 "Plus Jakarta Sans", sans-serif; letter-spacing: 1.2px; text-transform: uppercase; color: var(--accent); }
-#lignees #lg-parametres-agenda { display: grid; gap: 6px; padding-left: 4px; }
-#lignees #lg-parametres-agenda.lg-inactif { opacity: .45; pointer-events: none; }
+#lignees .lg-anniv-corps { display: grid; gap: 8px; }
+#lignees .lg-anniv-corps.lg-inactif { opacity: .45; pointer-events: none; }
+#lignees #lg-anniv { max-height: 88vh; }
+#lignees .lg-cases small { color: var(--texte-3); }
 #lignees .lg-cases label { line-height: 1.35; align-items: flex-start; }
 #lignees .lg-cases input { margin-top: 2px !important; }
 #lignees .lg-cases label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--texte); margin: 0; }

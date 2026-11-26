@@ -49,6 +49,7 @@ Util::addScript('lignees', 'lignees');
           <button id="lg-theme"><span>Changer de thème</span><span class="lg-pastille-theme" id="lg-nom-theme">Parchemin</span></button>
           <button id="lg-nouvel-arbre-btn"><span>Nouvel arbre…</span></button>
           <button id="lg-partage-btn"><span>Partager cet arbre…</span></button>
+          <button id="lg-anniv-btn"><span>Mes anniversaires…</span></button>
           <button id="lg-parametres-btn"><span>Paramètres de l'arbre…</span></button>
           <button id="lg-import-ged"><span>Importer un fichier GEDCOM</span></button>
           <button id="lg-export-ged"><span>Exporter en GEDCOM</span></button>
@@ -92,6 +93,7 @@ Util::addScript('lignees', 'lignees');
         <button data-action="enfant">Ajouter un enfant</button>
         <button data-action="relier">Relier à une personne existante</button>
         <button data-action="pont">Relier à la même personne dans un autre arbre</button>
+        <button data-action="agenda" id="lg-action-agenda" hidden>Retirer de mon agenda d'anniversaires</button>
         <button data-action="deplacer" id="lg-action-deplacer" hidden>Déplacer cette lignée dans un nouvel arbre</button>
         <label class="lg-bouton-fichier">Changer la photo<input type="file" accept="image/*" id="lg-photo" hidden></label>
         <button data-action="supprimer" class="lg-danger">Supprimer cette personne</button>
@@ -157,25 +159,36 @@ Util::addScript('lignees', 'lignees');
   <dialog id="lg-parametres" class="lg-panneau">
     <form method="dialog" class="lg-champs" id="lg-form-parametres">
       <h3 class="lg-serif" id="lg-parametres-titre">Paramètres de l'arbre</h3>
-      <h4 class="lg-section">Anniversaires</h4>
-      <div class="lg-cases">
-        <label><input type="checkbox" name="anniversaires"> Ajouter les anniversaires dans un agenda Nextcloud</label>
-      </div>
-      <div id="lg-parametres-agenda">
-        <label>Agenda</label><select name="agenda_uri"></select>
-        <input name="agenda_nom" placeholder="Nom du nouvel agenda" hidden>
-        <p class="lg-aide" id="lg-parametres-agenda-info"></p>
-        <div class="lg-cases">
-          <label><input type="checkbox" name="deces"> Inclure les personnes décédées</label>
-          <label><input type="checkbox" name="rappel"> Rappel la veille à 9 h</label>
-        </div>
-      </div>
       <h4 class="lg-section">Lignées</h4>
       <div class="lg-cases">
         <label><input type="checkbox" name="lignee_conjoint"> Quand on ajoute un conjoint (mari ou femme), créer automatiquement un arbre pour sa famille</label>
       </div>
       <p class="lg-aide">Ces réglages valent pour tous ceux qui voient cet arbre ; seuls ceux qui peuvent le modifier peuvent les changer.</p>
       <div class="lg-dialogue-boutons"><button value="annuler" formnovalidate>Annuler</button><button type="button" class="lg-enregistrer" id="lg-parametres-ok">Enregistrer</button></div>
+    </form>
+  </dialog>
+  <dialog id="lg-anniv" class="lg-panneau">
+    <form method="dialog" class="lg-champs" id="lg-form-anniv">
+      <h3 class="lg-serif">Mes anniversaires</h3>
+      <div class="lg-cases"><label><input type="checkbox" name="actif"> Mettre les anniversaires dans mon agenda</label></div>
+      <div id="lg-anniv-corps" class="lg-anniv-corps">
+        <div><label>Qui êtes-vous dans l'arbre ?</label><select name="moi"></select>
+          <p class="lg-aide">Votre lignée et celle de votre conjoint sont cochées par défaut.</p></div>
+        <h4 class="lg-section">Agendas</h4>
+        <div class="lg-cases" id="lg-anniv-agendas"></div>
+        <input name="agenda_nom" placeholder="Nom du nouvel agenda" hidden>
+        <h4 class="lg-section">Lignées</h4>
+        <div class="lg-cases" id="lg-anniv-lignees"></div>
+        <h4 class="lg-section">Personnes retirées</h4>
+        <div class="lg-liste-partages" id="lg-anniv-exclus"></div>
+        <h4 class="lg-section">Options</h4>
+        <div class="lg-cases">
+          <label><input type="checkbox" name="deces"> Inclure les personnes décédées</label>
+          <label><input type="checkbox" name="rappel"> Rappel la veille à 9 h</label>
+        </div>
+      </div>
+      <p class="lg-aide">Ces réglages sont personnels : chaque membre de la famille choisit les siens.</p>
+      <div class="lg-dialogue-boutons"><button value="annuler" formnovalidate>Annuler</button><button type="button" class="lg-enregistrer" id="lg-anniv-ok">Enregistrer</button></div>
     </form>
   </dialog>
   <dialog id="lg-import" class="lg-panneau">

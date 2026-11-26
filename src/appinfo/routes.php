@@ -27,6 +27,7 @@ return ['routes'=>[
  ['name'=>'genealogy#createChild','url'=>'/api/trees/{treeId}/children','verb'=>'POST'],
  ['name'=>'genealogy#setParents','url'=>'/api/people/{id}/parents','verb'=>'POST'],
  ['name'=>'genealogy#movePerson','url'=>'/api/people/{id}/position','verb'=>'PUT'],['name'=>'genealogy#movePeople','url'=>'/api/trees/{treeId}/positions','verb'=>'POST'],['name'=>'genealogy#resetLayout','url'=>'/api/trees/{treeId}/layout/reset','verb'=>'POST'],
+ ['name'=>'anniversaires#lire','url'=>'/api/anniversaires','verb'=>'GET'],['name'=>'anniversaires#enregistrer','url'=>'/api/anniversaires','verb'=>'PUT'],['name'=>'anniversaires#exclure','url'=>'/api/anniversaires/exclusions','verb'=>'PUT'],
  ['name'=>'parametres#lire','url'=>'/api/trees/{treeId}/parametres','verb'=>'GET'],['name'=>'parametres#enregistrer','url'=>'/api/trees/{treeId}/parametres','verb'=>'PUT'],['name'=>'parametres#synchroniser','url'=>'/api/trees/{treeId}/anniversaires','verb'=>'POST'],
  ['name'=>'genealogy#themes','url'=>'/api/trees/{treeId}/themes','verb'=>'GET'],['name'=>'genealogy#setTheme','url'=>'/api/trees/{treeId}/themes','verb'=>'PUT'],
  ['name'=>'genealogy#passerelles','url'=>'/api/trees/{treeId}/passerelles','verb'=>'GET'],['name'=>'genealogy#createPasserelle','url'=>'/api/people/{personId}/passerelles','verb'=>'POST'],['name'=>'genealogy#deletePasserelle','url'=>'/api/passerelles/{id}','verb'=>'DELETE'],

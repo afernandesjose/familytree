@@ -79,6 +79,8 @@
 
   // ---- Conversion API → family-chart
   function construireDonnees() {
+    // Même ordre que le serveur (lib/Service/LigneesCalcul.php) pour obtenir les mêmes clés de lignée.
+    personnes.sort((a, b) => Number(a.id) - Number(b.id));
     const map = new Map(personnes.map(p => [String(p.id), {
       id: String(p.id),
       data: {
@@ -404,7 +406,7 @@
     const cadrage = mode === 'famille' && famille ? d3.zoomTransform(famille.conteneur) : undefined;
     await chargerArbre(arbre.id, centre, cadrage);
     if (choisi && personne(choisi)) ouvrirFiche(choisi); else fermerFiche();
-    if (parametresArbre.anniversaires) api('POST', `/trees/${arbre.id}/anniversaires`).catch(() => {});
+    api('POST', `/trees/${arbre.id}/anniversaires`).catch(() => {}); // remet à jour les agendas de la famille
   }
 
   // ---- Fiche latérale
@@ -418,6 +420,9 @@
     // Avec plusieurs ponts, le bouton suit le plus récent ; l'onglet Liens les liste tous.
     const pont = (ponts.get(String(id)) || []).reduce((r, x) => (!r || Number(x.id) > Number(r.id) ? x : r), null);
     const autre = !pont && mode === 'famille' && ligneeAffichee !== 'toutes' ? ligneesNommees.find(l => l.cle === complet?.cleDe.get(String(id)) && l.cle !== ligneeAffichee) : null;
+    const agenda = $('#lg-action-agenda');
+    agenda.hidden = !mesAnniversaires?.preferences.actif || !p.birthday;
+    agenda.textContent = estExclu(id) ? 'Remettre dans mon agenda d\'anniversaires' : 'Retirer de mon agenda d\'anniversaires';
     const ligneeRacine = ligneesNommees.length >= 2 ? ligneesNommees.find(l => l.racine.includes(String(id))) : null;
     $('#lg-action-deplacer').hidden = !peutModifier || !ligneeRacine;
     if (ligneeRacine) $('#lg-action-deplacer').textContent = `Déplacer la lignée ${ligneeRacine.nom} dans un nouvel arbre`;
@@ -746,33 +751,77 @@
     let p;
     try { p = await api('GET', `/trees/${arbre.id}/parametres`); } catch (err) { erreur(err); return; }
     $('#lg-parametres-titre').textContent = `Paramètres de « ${arbre.name} »`;
-    for (const k of ['anniversaires', 'deces', 'rappel', 'lignee_conjoint']) f[k].checked = !!p[k];
-    const options = p.mes_agendas.map(a => `<option value="${echapper(a.uri)}">${echapper(a.nom)}</option>`);
-    if (p.agenda_uri && !p.agenda_est_le_mien) options.unshift(`<option value="">Garder l'agenda de ${echapper(p.agenda_proprietaire)}</option>`);
-    options.push('<option value="nouveau">Nouvel agenda…</option>');
-    f.agenda_uri.innerHTML = options.join('');
-    f.agenda_uri.value = p.agenda_est_le_mien && p.agenda_uri ? p.agenda_uri : (p.agenda_uri ? '' : (p.mes_agendas[0]?.uri ?? 'nouveau'));
-    f.agenda_nom.value = `Anniversaires — ${arbre.name}`;
-    const maj = () => {
-      $('#lg-parametres-agenda').classList.toggle('lg-inactif', !f.anniversaires.checked);
-      f.agenda_nom.hidden = f.agenda_uri.value !== 'nouveau';
-      $('#lg-parametres-agenda-info').textContent = f.agenda_uri.value === ''
-        ? `Les anniversaires vont dans un agenda de ${p.agenda_proprietaire}.`
-        : 'Lignées n\'ajoute, ne modifie et ne retire que ses propres événements dans cet agenda.';
-    };
-    f.onchange = maj; maj();
-    [...f.elements].forEach(e => { if (e.name) e.disabled = !p.peut_modifier; });
+    f.lignee_conjoint.checked = !!p.lignee_conjoint; f.lignee_conjoint.disabled = !p.peut_modifier;
     $('#lg-parametres-ok').hidden = !p.peut_modifier;
     $('#lg-parametres-ok').onclick = async () => {
-      const corps = { anniversaires: f.anniversaires.checked, deces: f.deces.checked, rappel: f.rappel.checked, lignee_conjoint: f.lignee_conjoint.checked };
-      if (f.anniversaires.checked && f.agenda_uri.value) { corps.agenda_uri = f.agenda_uri.value; corps.agenda_nom = f.agenda_nom.value.trim(); }
+      try { parametresArbre = await api('PUT', `/trees/${arbre.id}/parametres`, { lignee_conjoint: f.lignee_conjoint.checked }); dlg.close(); toast('Paramètres enregistrés'); }
+      catch (err) { erreur(err); }
+    };
+    dlg.showModal();
+  }
+
+  // ---- Mes anniversaires (réglages personnels)
+  let mesAnniversaires = null; // { preferences: {actif, exclus…}, … }
+  async function chargerMesAnniversaires() {
+    try { mesAnniversaires = await api('GET', '/anniversaires'); } catch (e) { mesAnniversaires = null; }
+  }
+  const estExclu = id => !!mesAnniversaires?.preferences.exclus.includes(String(id));
+  async function basculerAgenda() {
+    if (!choisi) return;
+    const exclu = !estExclu(choisi);
+    try {
+      const r = await api('PUT', '/anniversaires/exclusions', { personne: choisi, exclu });
+      mesAnniversaires.preferences.exclus = r.exclus; ouvrirFiche(choisi);
+      toast(exclu ? 'Retiré de votre agenda d\'anniversaires' : 'Remis dans votre agenda d\'anniversaires');
+    } catch (err) { erreur(err); }
+  }
+  async function mesAnniversairesDialogue() {
+    const dlg = $('#lg-anniv'), f = $('#lg-form-anniv');
+    await chargerMesAnniversaires();
+    if (!mesAnniversaires) { toast('Réglages indisponibles'); return; }
+    const remplir = v => {
+      const p = v.preferences;
+      f.actif.checked = p.actif; f.deces.checked = p.deces; f.rappel.checked = p.rappel;
+      f.moi.innerHTML = '<option value="">— non choisi —</option>' + v.personnes.map(x => `<option value="${x.id}">${echapper(x.libelle)}${x.arbre ? ' · ' + echapper(x.arbre) : ''}</option>`).join('');
+      f.moi.value = p.moi || '';
+      $('#lg-anniv-agendas').innerHTML = v.mes_agendas.map(a => `<label><input type="checkbox" name="agenda" value="${echapper(a.uri)}" ${p.agendas.includes(a.uri) ? 'checked' : ''}> ${echapper(a.nom)}</label>`).join('')
+        + '<label><input type="checkbox" name="agenda" value="nouveau"> Nouvel agenda…</label>';
+      f.agenda_nom.value = 'Anniversaires de la famille';
+      $('#lg-anniv-lignees').innerHTML = v.lignees.map(l => `<label><input type="checkbox" name="lignee" value="${echapper(l.cle)}" ${l.inclus ? 'checked' : ''}>
+        <span>Lignée ${echapper(l.nom)} <small>· ${echapper(l.arbre)} · ${l.membres} pers.${l.par_defaut ? ' · la vôtre' : ''}</small></span></label>`).join('');
+      $('#lg-anniv-exclus').innerHTML = v.exclus.length ? v.exclus.map(x => `<div class="lg-partage"><span>${echapper(x.libelle)}</span><button type="button" class="lg-delier" data-remettre="${x.id}" title="Remettre dans l'agenda">↺</button></div>`).join('')
+        : '<p class="lg-aide">Personne. Pour retirer quelqu\'un : sa fiche → Actions → « Retirer de mon agenda ».</p>';
+      maj();
+    };
+    const maj = () => {
+      $('#lg-anniv-corps').classList.toggle('lg-inactif', !f.actif.checked);
+      f.agenda_nom.hidden = !f.querySelector('input[name="agenda"][value="nouveau"]')?.checked;
+    };
+    f.onchange = async e => {
+      if (e.target.name === 'moi') { // la personne choisie change les lignées cochées par défaut
+        try { const r = await api('PUT', '/anniversaires', { moi: f.moi.value }); mesAnniversaires = r.vue; remplir(r.vue); } catch (err) { erreur(err); }
+        return;
+      }
+      maj();
+    };
+    $('#lg-anniv-exclus').onclick = async e => {
+      const b = e.target.closest('[data-remettre]'); if (!b) return;
+      try { await api('PUT', '/anniversaires/exclusions', { personne: b.dataset.remettre, exclu: false }); await chargerMesAnniversaires(); remplir(mesAnniversaires); }
+      catch (err) { erreur(err); }
+    };
+    $('#lg-anniv-ok').onclick = async () => {
+      const agendas = [...f.querySelectorAll('input[name="agenda"]:checked')].map(c => c.value);
+      if (f.actif.checked && !agendas.length) { toast('Choisissez au moins un agenda'); return; }
+      const lignees = Object.fromEntries([...f.querySelectorAll('input[name="lignee"]')].map(c => [c.value, c.checked]));
       try {
-        const r = await api('PUT', `/trees/${arbre.id}/parametres`, corps);
-        parametresArbre = r.parametres; dlg.close();
+        const r = await api('PUT', '/anniversaires', { actif: f.actif.checked, deces: f.deces.checked, rappel: f.rappel.checked, moi: f.moi.value,
+          agendas, agenda_nom: f.agenda_nom.value.trim(), lignees });
+        mesAnniversaires = r.vue; dlg.close();
         const b = r.synchronisation;
-        toast(b.actif ? `Agenda à jour : ${b.ajoutes} ajouté(s), ${b.modifies} modifié(s), ${b.supprimes} retiré(s)` : 'Paramètres enregistrés');
+        toast(b.actif ? `${b.personnes} anniversaires dans votre agenda (${b.ajoutes} ajouté(s), ${b.supprimes} retiré(s))` : 'Anniversaires désactivés');
       } catch (err) { erreur(err); }
     };
+    remplir(mesAnniversaires);
     dlg.showModal();
   }
 
@@ -848,6 +897,7 @@
       try { const pr = await api('GET', '/preferences'); if (!arbres.some(a => a.id == depart)) depart = pr.startTreeId; } catch (e) { /* préférences facultatives */ }
       if (!arbres.some(a => a.id == depart)) depart = arbres[0].id;
       remplirChoix(depart);
+      chargerMesAnniversaires();
       await chargerArbre(depart);
     } catch (e) { erreur(e); }
   }
@@ -921,6 +971,7 @@
     document.addEventListener('click', () => $('#lg-palette').classList.remove('lg-ouverte'));
     $('#lg-partage-btn').onclick = () => partager();
     $('#lg-parametres-btn').onclick = () => parametres();
+    $('#lg-anniv-btn').onclick = () => mesAnniversairesDialogue();
     $('#lg-choix-lignee').onchange = e => { fermerFiche(); changerLignee(e.target.value, famille?.selection); };
     document.querySelectorAll('.lg-onglets button').forEach(b => { b.onclick = () => {
       document.querySelectorAll('.lg-onglets button').forEach(x => x.classList.toggle('lg-actif', x === b));
@@ -939,6 +990,7 @@
       else if (a === 'relier') relier();
       else if (a === 'pont') pont();
       else if (a === 'deplacer') deplacerLignee();
+      else if (a === 'agenda') basculerAgenda();
       else ajouter(a);
     };
     $('#lg-photo').onchange = e => { envoyerPhoto(e.target.files[0]); e.target.value = ''; };
