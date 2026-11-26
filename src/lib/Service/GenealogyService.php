@@ -532,7 +532,7 @@ fn($nA,$aB)=>(int)$aB['updated_at']<=>(int)$nA['updated_at']);return new DataRes
  * @param int $nId Identifikátor cílového záznamu.
  * @return DataResponse HTTP odpověď s výslednými daty nebo chybovou zprávou ve formátu JSON.
  */
-  public function deleteTree(int $nId):DataResponse{$oT=$this->row('hc_familytree_trees',$nId);if(!$oT||$oT['owner_uid']!==$this->sUid)return $this->deny();$this->supprimerPasserelles(array_map(fn($oP)=>(int)$oP['id'],$this->rows('hc_familytree_people',['tree_id'=>$nId])),'personne');foreach(['hc_familytree_proposals','hc_familytree_evidence','hc_familytree_search_log','hc_familytree_research_tasks','hc_familytree_history','hc_familytree_research','hc_familytree_doc_links','hc_familytree_relations','hc_familytree_events','hc_familytree_documents','hc_familytree_shares','hc_familytree_people'] as $sTable){$oQ=$this->oDb->getQueryBuilder();$oQ->delete($sTable)->where($oQ->expr()->eq('tree_id',$oQ->createNamedParameter($nId)))->executeStatement();}{ $oQ=$this->oDb->getQueryBuilder();$oQ->delete('hc_familytree_trees')->where($oQ->expr()->eq('id',$oQ->createNamedParameter($nId)))->executeStatement(); }return new DataResponse(['ok'=>true]);}
+  public function deleteTree(int $nId):DataResponse{$oT=$this->row('hc_familytree_trees',$nId);if(!$oT||$oT['owner_uid']!==$this->sUid)return $this->deny();$this->oConfig->deleteAppValue('lignees','themes_'.$nId);$this->supprimerPasserelles(array_map(fn($oP)=>(int)$oP['id'],$this->rows('hc_familytree_people',['tree_id'=>$nId])),'personne');foreach(['hc_familytree_proposals','hc_familytree_evidence','hc_familytree_search_log','hc_familytree_research_tasks','hc_familytree_history','hc_familytree_research','hc_familytree_doc_links','hc_familytree_relations','hc_familytree_events','hc_familytree_documents','hc_familytree_shares','hc_familytree_people'] as $sTable){$oQ=$this->oDb->getQueryBuilder();$oQ->delete($sTable)->where($oQ->expr()->eq('tree_id',$oQ->createNamedParameter($nId)))->executeStatement();}{ $oQ=$this->oDb->getQueryBuilder();$oQ->delete('hc_familytree_trees')->where($oQ->expr()->eq('id',$oQ->createNamedParameter($nId)))->executeStatement(); }return new DataResponse(['ok'=>true]);}
   /**
  * @brief Odstraní all trees pro oprávněně přístupný rodokmen.
  * @return DataResponse HTTP odpověď Nextcloudu s daty nebo oznámením chyby.
@@ -1233,5 +1233,31 @@ fn($nA,$aB)=>(int)$aB['updated_at']<=>(int)$nA['updated_at']);return new DataRes
     $oQ = $this->oDb->getQueryBuilder();
     $oQ->delete('lignees_passerelles')->where($oQ->expr()->in($sCol, $oQ->createNamedParameter($aIds, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT_ARRAY)))->executeStatement();
    }
+  }
+
+  // ---- Lignées : thème de couleur de chaque lignée (partagé par tous ceux qui voient l'arbre)
+
+  private const THEMES_LIGNEE = ['or', 'pourpre', 'bleu', 'rubis', 'emeraude', 'saphir', 'argent'];
+
+  /** Thèmes de l'arbre : {clé de lignée (ou « * » pour tout l'arbre) → nom du thème}. */
+  public function themes(int $nTreeId): DataResponse {
+   if (!$this->can($nTreeId)) return $this->deny();
+   $aThemes = json_decode($this->oConfig->getAppValue('lignees', 'themes_' . $nTreeId, '{}'), true);
+   return new DataResponse(is_array($aThemes) ? $aThemes : []);
+  }
+
+  /** Attribue un thème à une lignée (il faut pouvoir modifier l'arbre). */
+  public function setTheme(int $nTreeId): DataResponse {
+   if (!$this->can($nTreeId, true)) return $this->deny();
+   $aB = $this->body();
+   $sCle = (string)($aB['cle'] ?? ''); $sTheme = (string)($aB['theme'] ?? '');
+   if (!preg_match('/^(\*|[0-9+]{1,200})$/D', $sCle) || !in_array($sTheme, self::THEMES_LIGNEE, true)) {
+    return new JSONResponse(['error' => 'Lignée ou thème invalide.'], 400);
+   }
+   $aThemes = json_decode($this->oConfig->getAppValue('lignees', 'themes_' . $nTreeId, '{}'), true);
+   if (!is_array($aThemes)) $aThemes = [];
+   $aThemes[$sCle] = $sTheme;
+   $this->oConfig->setAppValue('lignees', 'themes_' . $nTreeId, json_encode($aThemes, JSON_THROW_ON_ERROR));
+   return new DataResponse($aThemes);
   }
 }

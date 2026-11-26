@@ -51,12 +51,12 @@
 #lignees #lg-arbre.lg-mode-famille:active { cursor: grabbing; }
 #lignees .lg-monde { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
 #lignees .lg-liens { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
-#lignees .lg-liens .lg-lien { fill: none; stroke: var(--ligne); stroke-width: 2px; stroke-linecap: round; stroke-linejoin: round; }
-#lignees .lg-liens .lg-anneaux circle { fill: var(--fond); stroke: var(--union); stroke-width: 1.8px; }
+#lignees .lg-liens .lg-lien { fill: none; stroke: var(--ligne-lignee, var(--ligne)); stroke-width: 2px; stroke-linecap: round; stroke-linejoin: round; }
+#lignees .lg-liens .lg-anneaux circle { fill: var(--fond); stroke: var(--union-lignee, var(--union)); stroke-width: 1.8px; }
 #lignees .lg-liens g { transition: opacity .28s; }
 #lignees .lg-liens g.lg-estompe { opacity: .12; }
 #lignees .lg-place { position: absolute; width: 210px; height: 112px; }
-#lignees .lg-place.card-main .lg-carte { border-color: var(--or); box-shadow: var(--ombre-choix); }
+#lignees .lg-place.card-main .lg-carte, #lignees .card-main .lg-carte { border-color: var(--or); box-shadow: 0 0 0 2.5px var(--or), 0 16px 34px -6px rgba(0,0,0,.2); }
 #lignees #lg-arbre.f3 { color: var(--texte); }
 #lignees #lg-arbre .link { stroke: var(--ligne) !important; stroke-width: 2px !important; stroke-linecap: round; transition: opacity .28s; }
 #lignees #lg-arbre .link.lg-estompe { opacity: .12; }
@@ -98,6 +98,17 @@
 #lignees .lg-logo { width: 36px; height: 36px; border-radius: 12px; border: 1px solid var(--or); color: var(--accent); display: grid; place-items: center; flex: none; }
 #lignees #lg-choix-arbre { font-size: 24px; font-weight: 700; border: none; background: transparent; padding: 0 4px 0 0; height: auto; max-width: 46vw; cursor: pointer; }
 #lignees #lg-choix-arbre option { font: 14px "Plus Jakarta Sans", sans-serif; color: #241d14; }
+#lignees .lg-ligne-lignee { position: relative; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+#lignees .lg-bouton-theme { margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px;
+  border: 1px solid var(--or); color: var(--accent); font-size: 12px; font-weight: 600; background: rgba(198,150,56,.08); }
+#lignees .lg-pastille { width: 12px; height: 12px; border-radius: 50%; display: inline-block; box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
+#lignees .lg-palette { position: absolute; left: 0; top: calc(100% + 8px); z-index: 50; width: 270px; border-radius: 16px; border-color: var(--or); padding: 8px; display: none; }
+#lignees .lg-palette.lg-ouverte { display: grid; gap: 4px; }
+#lignees .lg-palette h4 { margin: 2px 6px 6px; font: 600 11px/1.3 "Plus Jakarta Sans", sans-serif; letter-spacing: 1px; text-transform: uppercase; color: var(--texte-3); }
+#lignees .lg-palette button { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 10px; font-size: 13px; text-align: left; width: 100%; }
+#lignees .lg-palette button:hover { background: rgba(198,150,56,.12); }
+#lignees .lg-palette button.lg-actif { box-shadow: inset 0 0 0 1.5px var(--or); }
+#lignees .lg-palette .lg-echantillon { width: 34px; height: 22px; border-radius: 7px; flex: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
 #lignees .lg-choix-lignee { margin-top: 6px; padding: 3px 26px 3px 10px; border-radius: 999px; border: 1px solid var(--or); background-color: rgba(198,150,56,.1);
   color: var(--accent); font-size: 12px; font-weight: 600; height: auto; min-height: 0; cursor: pointer; max-width: 100%; }
 #lignees .lg-choix-lignee option { color: #241d14; background: #fff; }

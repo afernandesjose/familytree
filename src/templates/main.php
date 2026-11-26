@@ -21,7 +21,11 @@ Util::addScript('lignees', 'lignees');
       <div class="lg-titre-texte">
         <select id="lg-choix-arbre" class="lg-serif" title="Changer d'arbre"></select>
         <div class="lg-stats" id="lg-stats">Chargement…</div>
-        <select id="lg-choix-lignee" class="lg-choix-lignee" title="Changer de lignée" hidden></select>
+        <div class="lg-ligne-lignee">
+          <select id="lg-choix-lignee" class="lg-choix-lignee" title="Changer de lignée" hidden></select>
+          <button class="lg-bouton-theme" id="lg-theme-lignee" title="Thème royal de la lignée" hidden><span class="lg-pastille" id="lg-pastille-theme"></span>Thème</button>
+          <div class="lg-palette lg-panneau" id="lg-palette"></div>
+        </div>
       </div>
     </div>
     <div class="lg-outils">

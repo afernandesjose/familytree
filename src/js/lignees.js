@@ -44,6 +44,19 @@
     return json;
   }
 
+  // ---- Thèmes royaux (un par lignée, enregistrés sur le serveur)
+  const THEMES = {
+    or: { nom: 'Or impérial', accent: '#b68934', or: '#c8a254', ligne: '#b9944c', union: '#c79332', fond: '#f6f1e7', grille: 'rgba(164,134,82,.11)', carte: '#fffdf9', survol: '#fff9ee', bord: 'rgba(180,145,78,.28)' },
+    pourpre: { nom: 'Pourpre royal', accent: '#6d2e86', or: '#9a63b3', ligne: '#8a5aa6', union: '#b8923c', fond: '#f4eff6', grille: 'rgba(110,70,140,.10)', carte: '#fffcff', survol: '#faf3fd', bord: 'rgba(120,80,150,.28)', sombre: '#c79be0' },
+    bleu: { nom: 'Bleu de France', accent: '#1f4f9b', or: '#5d82c4', ligne: '#5677b3', union: '#c39a3d', fond: '#eef2f8', grille: 'rgba(60,90,150,.10)', carte: '#fcfdff', survol: '#f3f7fe', bord: 'rgba(70,100,160,.28)', sombre: '#8fb2ec' },
+    rubis: { nom: 'Rubis de Bourgogne', accent: '#8e1f3c', or: '#b9576f', ligne: '#a8566a', union: '#c39a3d', fond: '#f8eff0', grille: 'rgba(140,40,60,.09)', carte: '#fffcfc', survol: '#fdf3f5', bord: 'rgba(150,60,80,.26)', sombre: '#ec8aa2' },
+    emeraude: { nom: 'Émeraude impériale', accent: '#1d6b50', or: '#4f9a7c', ligne: '#4d8a71', union: '#c39a3d', fond: '#eef5f1', grille: 'rgba(40,110,80,.10)', carte: '#fcfffd', survol: '#f2faf6', bord: 'rgba(50,120,90,.26)', sombre: '#7fd1ad' },
+    saphir: { nom: 'Saphir de minuit', accent: '#d7b45a', or: '#d7b45a', ligne: '#8ea3c9', union: '#e0bd62', fond: '#101a33', grille: 'rgba(150,170,220,.07)', carte: '#18264a', survol: '#1e2f5a', bord: 'rgba(170,190,240,.22)',
+      texte: '#eef1fa', texte2: '#b9c3dc', texte3: '#8592b3', surface: 'rgba(20,32,62,.94)', sombre: '#e0bd62' },
+    argent: { nom: 'Argent royal', accent: '#5b6472', or: '#8c96a5', ligne: '#8a93a0', union: '#a9b2bf', fond: '#f2f3f5', grille: 'rgba(90,100,115,.10)', carte: '#ffffff', survol: '#f7f8fa', bord: 'rgba(100,110,125,.26)', sombre: '#c3cad4' },
+  };
+  let themes = {}; // clé de lignée (ou « * ») → nom du thème
+
   // ---- État
   let arbres = [], arbre = null, personnes = [], liens = [], donnees = [], graphique = null;
   let peutModifier = false, focus = false, choisi = null, personneDepart = null;
@@ -165,7 +178,7 @@
     const p = d.data.data, ne = annee(p.birthday), mort = annee(p.death);
     const dates = ne && mort ? `${ne} – ${mort}` : ne ? `Né${p.gender === 'F' ? 'e' : ''} en ${ne}` : 'Dates inconnues';
     const estompee = focus && idCentre() && !lignee(idCentre()).has(d.data.id);
-    return `<div class="lg-carte lg-${p.gender}${estompee ? ' lg-estompee' : ''}${mort || !p.vivant ? ' lg-decede' : ''}">
+    return `<div class="lg-carte lg-${p.gender}${estompee ? ' lg-estompee' : ''}${mort || !p.vivant ? ' lg-decede' : ''}" style="${teinte(d.data.id)}">
       <span class="lg-generation">${romain(p._generation)}</span>${ponts.has(d.data.id) ? `<span class="lg-pont-carte" title="Aussi dans : ${ponts.get(d.data.id).map(x => '« ' + echapper(x.cible.tree_name) + ' »').join(', ')}">🔗</span>` : ''}
       <div class="lg-haut"><div class="lg-medaillon">${medaillon(p)}</div>
         <div class="lg-identite"><div class="lg-prenom">${echapper(p['first name'])}</div><div class="lg-nom">${echapper(p['last name'])}</div></div></div>
@@ -204,6 +217,52 @@
     });
   }
 
+  // ---- Thèmes : la lignée affichée colore toute la vue ; avec plusieurs lignées visibles, chaque carte prend sa couleur.
+  const themeDe = cle => THEMES[themes[cle]] ? themes[cle] : THEMES[themes['*']] ? themes['*'] : 'or';
+  const cleCourante = () => {
+    if (mode === 'famille' && ligneeAffichee && ligneeAffichee !== 'toutes') return ligneeAffichee;
+    const id = idCentre(); return (id && complet?.cleDe.get(String(id))) || ligneesNommees[0]?.cle || '*';
+  };
+  const plusieursVisibles = () => ligneesNommees.length > 1 && (mode === 'centree' || ligneeAffichee === 'toutes');
+  function teinte(id) {
+    if (!plusieursVisibles()) return '';
+    const t = THEMES[themeDe(complet?.cleDe.get(String(id)))], sombre = racine().classList.contains('lg-emeraude');
+    const a = sombre ? (t.sombre || t.or) : t.accent;
+    return `--or:${t.or};--accent:${a};--bord:${t.bord};--ligne-lignee:${t.ligne};--union-lignee:${t.union}`;
+  }
+  function appliquerTheme() {
+    const r = racine(), sombre = r.classList.contains('lg-emeraude');
+    const nom = plusieursVisibles() ? themeDe('*') : themeDe(cleCourante()), t = THEMES[nom];
+    for (const v of ['--accent', '--or', '--ligne', '--union', '--fond', '--grille', '--carte', '--carte-survol', '--bord', '--texte', '--texte-2', '--texte-3', '--surface']) r.style.removeProperty(v);
+    if (sombre) { r.style.setProperty('--accent', t.sombre || t.or); r.style.setProperty('--or', t.sombre || t.or); r.style.setProperty('--union', t.union); }
+    else {
+      const vars = { '--accent': t.accent, '--or': t.or, '--ligne': t.ligne, '--union': t.union, '--fond': t.fond, '--grille': t.grille,
+        '--carte': t.carte, '--carte-survol': t.survol, '--bord': t.bord, '--texte': t.texte, '--texte-2': t.texte2, '--texte-3': t.texte3, '--surface': t.surface };
+      for (const [k, v] of Object.entries(vars)) if (v) r.style.setProperty(k, v);
+    }
+    $('#lg-pastille-theme').style.background = t.accent;
+    $('#lg-theme-lignee').hidden = !peutModifier || !donnees.length;
+    $('#lg-theme-lignee').title = `Thème royal : ${t.nom}`;
+  }
+  function ouvrirPalette() {
+    const pal = $('#lg-palette');
+    if (pal.classList.contains('lg-ouverte')) { pal.classList.remove('lg-ouverte'); return; }
+    const cle = cleCourante(), actuel = themeDe(cle), l = ligneesNommees.find(x => x.cle === cle);
+    pal.innerHTML = `<h4>Thème de la lignée ${echapper(l ? l.nom : arbre.name)}</h4>` + Object.entries(THEMES).map(([k, t]) =>
+      `<button data-theme="${k}" class="${k === actuel ? 'lg-actif' : ''}"><span class="lg-echantillon" style="background:linear-gradient(135deg, ${t.fond} 0 45%, ${t.accent} 45% 75%, ${t.union} 75%)"></span>${t.nom}</button>`).join('');
+    pal.classList.add('lg-ouverte');
+  }
+  async function choisirTheme(nom) {
+    const cle = ligneesNommees.length > 1 ? cleCourante() : '*';
+    try {
+      themes = await api('PUT', `/trees/${arbre.id}/themes`, { cle, theme: nom });
+      $('#lg-palette').classList.remove('lg-ouverte');
+      const cadrage = mode === 'famille' && famille ? d3.zoomTransform(famille.conteneur) : undefined;
+      dessiner(idCentre(), cadrage);
+      toast(`Thème ${THEMES[nom].nom} appliqué`);
+    } catch (err) { erreur(err); }
+  }
+
   // ---- Vue « toute la famille »
   const LC = 210, HC = 112;
   function dessinerFamille(idCentre, transformation) {
@@ -212,10 +271,11 @@
     const monde = conteneur.firstChild, svg = monde.firstChild, c = id => disposition.cartes.get(String(id));
     let traces = '';
     const anneaux = (x, y) => `<g class="lg-anneaux"><circle cx="${x - 4}" cy="${y}" r="6"/><circle cx="${x + 4}" cy="${y}" r="6"/></g>`;
+    const style = id => { const v = teinte(id); return v ? ` style="${v}"` : ''; };
     for (const { a, b } of disposition.couples) {
       const A = c(a), B = c(b), ids = `${a} ${b}`;
-      if (A.y === B.y) traces += `<g data-ids="${ids}"><path class="lg-lien" d="M${A.x + LC / 2},${A.y} H${B.x - LC / 2}"/>${anneaux((A.x + LC / 2 + B.x - LC / 2) / 2, A.y)}</g>`;
-      else traces += `<g data-ids="${ids}"><path class="lg-lien" d="M${A.x + LC / 2},${A.y} H${(A.x + B.x) / 2} V${B.y} H${B.x - LC / 2}"/></g>`;
+      if (A.y === B.y) traces += `<g data-ids="${ids}"${style(a)}><path class="lg-lien" d="M${A.x + LC / 2},${A.y} H${B.x - LC / 2}"/>${anneaux((A.x + LC / 2 + B.x - LC / 2) / 2, A.y)}</g>`;
+      else traces += `<g data-ids="${ids}"${style(a)}><path class="lg-lien" d="M${A.x + LC / 2},${A.y} H${(A.x + B.x) / 2} V${B.y} H${B.x - LC / 2}"/></g>`;
     }
     for (const f of disposition.familles) {
       const ps = f.parents.map(c), es = f.enfants.map(c);
@@ -223,10 +283,10 @@
       const ox = couple ? (ps[0].x + LC / 2 + ps[1].x - LC / 2) / 2 : ps[0].x, oy = couple ? ps[0].y + 7 : ps[0].y + HC / 2;
       const yBarre = Math.min(...es.map(e => e.y)) - HC / 2 - 34;
       // Un groupe par enfant pour pouvoir estomper précisément en « focus lignée ».
-      traces += `<g data-ids="${f.parents.join(' ')}"><path class="lg-lien" d="M${ox},${oy} V${yBarre}"/></g>`;
+      traces += `<g data-ids="${f.parents.join(' ')}"${style(f.enfants[0])}><path class="lg-lien" d="M${ox},${oy} V${yBarre}"/></g>`;
       f.enfants.forEach((e, k) => {
         const E = es[k];
-        traces += `<g data-ids="${f.parents.join(' ')} ${e}"><path class="lg-lien" d="M${ox},${yBarre} H${E.x} V${E.y - HC / 2}"/></g>`;
+        traces += `<g data-ids="${f.parents.join(' ')} ${e}"${style(e)}><path class="lg-lien" d="M${ox},${yBarre} H${E.x} V${E.y - HC / 2}"/></g>`;
       });
     }
     svg.innerHTML = traces;
@@ -286,6 +346,7 @@
     d3.select(conteneur).on('.zoom', null); conteneur.onclick = null;
     graphique = null; famille = null;
     if (!donnees.length) { mettreAJourStats(); return; }
+    appliquerTheme();
     if (mode === 'famille') { dessinerFamille(idCentre, transformation); mettreAJourStats(); return; }
     graphique = f3.createChart('#lg-arbre', donnees)
       .setTransitionTime(650).setCardXSpacing(250).setCardYSpacing(175)
@@ -322,6 +383,7 @@
         const k = String(pt.person_id); if (!ponts.has(k)) ponts.set(k, []); ponts.get(k).push(pt);
       }
     } catch (e) { /* ponts facultatifs */ }
+    try { themes = await api('GET', `/trees/${id}/themes`); } catch (e) { themes = {}; }
     peutModifier = !!r.canEdit;
     racine().classList.toggle('lg-lecture-seule', !peutModifier);
     personneDepart = r.tree.root_person_id;
@@ -764,6 +826,7 @@
     $('#lg-theme').onclick = () => {
       const em = racine().classList.toggle('lg-emeraude');
       $('#lg-nom-theme').textContent = em ? 'Émeraude' : 'Parchemin'; retenir('theme', em ? 'emeraude' : 'parchemin');
+      dessiner(idCentre(), mode === 'famille' && famille ? d3.zoomTransform(famille.conteneur) : undefined);
     };
     $('#lg-export-ged').onclick = () => { if (arbre) window.location.href = OC.generateUrl(`/apps/lignees/api/trees/${arbre.id}/export/gedcom`); };
     $('#lg-moi').onclick = () => { const moi = personneMoi(); if (moi) centrer(moi); };
@@ -800,6 +863,9 @@
       else { changerLignee(b.dataset.cle, id); ouvrirFiche(id); }
     };
     $('#lg-nouvel-arbre-btn').onclick = () => nouvelArbre();
+    $('#lg-theme-lignee').onclick = e => { e.stopPropagation(); ouvrirPalette(); };
+    $('#lg-palette').onclick = e => { e.stopPropagation(); const b = e.target.closest('[data-theme]'); if (b) choisirTheme(b.dataset.theme); };
+    document.addEventListener('click', () => $('#lg-palette').classList.remove('lg-ouverte'));
     $('#lg-partage-btn').onclick = () => partager();
     $('#lg-choix-lignee').onchange = e => { fermerFiche(); changerLignee(e.target.value, famille?.selection); };
     document.querySelectorAll('.lg-onglets button').forEach(b => { b.onclick = () => {

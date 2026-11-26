@@ -27,6 +27,7 @@ return ['routes'=>[
  ['name'=>'genealogy#createChild','url'=>'/api/trees/{treeId}/children','verb'=>'POST'],
  ['name'=>'genealogy#setParents','url'=>'/api/people/{id}/parents','verb'=>'POST'],
  ['name'=>'genealogy#movePerson','url'=>'/api/people/{id}/position','verb'=>'PUT'],['name'=>'genealogy#movePeople','url'=>'/api/trees/{treeId}/positions','verb'=>'POST'],['name'=>'genealogy#resetLayout','url'=>'/api/trees/{treeId}/layout/reset','verb'=>'POST'],
+ ['name'=>'genealogy#themes','url'=>'/api/trees/{treeId}/themes','verb'=>'GET'],['name'=>'genealogy#setTheme','url'=>'/api/trees/{treeId}/themes','verb'=>'PUT'],
  ['name'=>'genealogy#passerelles','url'=>'/api/trees/{treeId}/passerelles','verb'=>'GET'],['name'=>'genealogy#createPasserelle','url'=>'/api/people/{personId}/passerelles','verb'=>'POST'],['name'=>'genealogy#deletePasserelle','url'=>'/api/passerelles/{id}','verb'=>'DELETE'],
  ['name'=>'genealogy#createRelation','url'=>'/api/trees/{treeId}/relationships','verb'=>'POST'],['name'=>'genealogy#deleteRelation','url'=>'/api/relationships/{id}','verb'=>'DELETE'],
  ['name'=>'genealogy#createEvent','url'=>'/api/people/{personId}/events','verb'=>'POST'],['name'=>'genealogy#deleteEvent','url'=>'/api/events/{id}','verb'=>'DELETE'],

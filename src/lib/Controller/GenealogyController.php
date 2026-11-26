@@ -228,6 +228,8 @@ public function __construct(IRequest $oRequest, private GenealogyService $oServi
     #[NoAdminRequired] public function passerelles(int $treeId): DataResponse { return $this->oService->passerelles($treeId); }
     #[NoAdminRequired] public function createPasserelle(int $personId): DataResponse { return $this->oService->createPasserelle($personId); }
     #[NoAdminRequired] public function deletePasserelle(int $id): DataResponse { return $this->oService->deletePasserelle($id); }
+    #[NoAdminRequired] public function themes(int $treeId): DataResponse { return $this->oService->themes($treeId); }
+    #[NoAdminRequired] public function setTheme(int $treeId): DataResponse { return $this->oService->setTheme($treeId); }
     /**
  * @brief Přidá životní událost k osobě.
  * @param int $personId Identifikátor osoby.
