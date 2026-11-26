@@ -81,6 +81,7 @@ Util::addScript('lignees', 'lignees');
         <button data-action="parent">Ajouter un parent</button>
         <button data-action="conjoint">Ajouter un conjoint</button>
         <button data-action="enfant">Ajouter un enfant</button>
+        <button data-action="relier">Relier à une personne existante</button>
         <label class="lg-bouton-fichier">Changer la photo<input type="file" accept="image/*" id="lg-photo" hidden></label>
         <button data-action="supprimer" class="lg-danger">Supprimer cette personne</button>
       </div>
@@ -94,6 +95,16 @@ Util::addScript('lignees', 'lignees');
       <div class="lg-ligne2"><div><label>Genre</label><select name="gender"><option value="male">Homme</option><option value="female">Femme</option><option value="">Non précisé</option></select></div>
         <div><label>Naissance</label><input name="birth_date" type="date"></div></div>
       <div class="lg-dialogue-boutons"><button value="annuler" formnovalidate>Annuler</button><button value="ok" class="lg-enregistrer">Ajouter</button></div>
+    </form>
+  </dialog>
+  <dialog id="lg-relier" class="lg-panneau">
+    <form method="dialog" class="lg-champs" id="lg-form-relier">
+      <h3 class="lg-serif" id="lg-relier-titre">Relier à une personne existante</h3>
+      <div><label>Type de lien</label>
+        <select name="type"><option value="parent">… est son parent</option><option value="enfant">… est son enfant</option><option value="conjoint">… est son conjoint</option></select></div>
+      <div><label>Personne</label><select name="personne" required></select></div>
+      <p class="lg-aide" id="lg-relier-aide"></p>
+      <div class="lg-dialogue-boutons"><button value="annuler" formnovalidate>Annuler</button><button value="ok" class="lg-enregistrer">Relier</button></div>
     </form>
   </dialog>
   <dialog id="lg-import" class="lg-panneau">

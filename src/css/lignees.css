@@ -156,6 +156,11 @@
 #lignees .lg-lien-personne { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 8px; border: 1px solid transparent; border-radius: 12px; background: none; text-align: left; }
 #lignees .lg-lien-personne:hover { border-color: var(--bord); background: rgba(198,150,56,.08); }
 #lignees .lg-lien-personne .lg-medaillon { width: 32px; height: 32px; font-size: 13px; }
+#lignees .lg-ligne-lien { display: flex; align-items: center; gap: 4px; }
+#lignees .lg-ligne-lien .lg-lien-personne { flex: 1; min-width: 0; }
+#lignees .lg-delier { flex: none; width: 28px; height: 28px; border-radius: 50%; color: var(--texte-3); font-size: 13px; }
+#lignees .lg-delier:hover { color: var(--danger); background: rgba(181,72,58,.1); }
+#lignees .lg-lecture-seule .lg-delier { display: none; }
 #lignees .lg-lien-personne small { display: block; color: var(--texte-3); font-size: 11px; }
 #lignees .lg-vide-liste { color: var(--texte-3); font-size: 12px; font-style: italic; margin: 0; }
 #lignees .lg-actions { display: grid; gap: 8px; }
@@ -164,10 +169,10 @@
 #lignees .lg-actions .lg-danger { color: var(--danger); }
 #lignees .lg-lecture-seule .lg-actions button:not([data-action="centrer"]), #lignees .lg-lecture-seule .lg-bouton-fichier, #lignees .lg-lecture-seule .lg-enregistrer, #lignees .lg-lecture-seule #lg-nouveau { display: none; }
 
-#lignees #lg-dialogue[open], #lignees #lg-import[open] { position: fixed; inset: 0; margin: auto; height: fit-content; max-height: 90vh; overflow: auto; }
-#lignees #lg-dialogue, #lignees #lg-import { border-radius: 20px; border-color: var(--or); width: min(440px, 92vw); padding: 20px; color: var(--texte); }
-#lignees #lg-dialogue::backdrop, #lignees #lg-import::backdrop { background: rgba(20,15,8,.35); backdrop-filter: blur(2px); }
-#lignees #lg-dialogue h3, #lignees #lg-import h3 { margin: 0 0 4px; font-size: 24px; color: var(--texte); }
+#lignees #lg-dialogue[open], #lignees #lg-import[open], #lignees #lg-relier[open] { position: fixed; inset: 0; margin: auto; height: fit-content; max-height: 90vh; overflow: auto; }
+#lignees #lg-dialogue, #lignees #lg-import, #lignees #lg-relier { border-radius: 20px; border-color: var(--or); width: min(440px, 92vw); padding: 20px; color: var(--texte); }
+#lignees #lg-dialogue::backdrop, #lignees #lg-import::backdrop, #lignees #lg-relier::backdrop { background: rgba(20,15,8,.35); backdrop-filter: blur(2px); }
+#lignees #lg-dialogue h3, #lignees #lg-import h3, #lignees #lg-relier h3 { margin: 0 0 4px; font-size: 24px; color: var(--texte); }
 #lignees .lg-aide { margin: 0; font-size: 12px; color: var(--texte-3); line-height: 1.45; }
 #lignees .lg-apercu { border: 1px solid var(--bord); border-radius: 14px; padding: 10px 12px; font-size: 12.5px; line-height: 1.6; background: rgba(198,150,56,.07); }
 #lignees .lg-apercu strong { color: var(--accent); }

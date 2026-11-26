@@ -288,12 +288,18 @@
     [...f.elements].forEach(e => { if (e.name) e.disabled = !peutModifier; });
 
     const freres = [...new Set(d.rels.parents.flatMap(x => parId(x)?.rels.children || []))].filter(x => x !== d.id);
-    const bloc = (titre, ids) => `<h3>${titre}</h3>` + (ids.length ? ids.map(i => {
-      const q = parId(i).data;
-      return `<button class="lg-lien-personne" data-id="${i}"><div class="lg-medaillon lg-${q.gender}">${medaillon(q)}</div>
-        <div><strong>${echapper(q['first name'])} ${echapper(q['last name'])}</strong><small>${dateLongue(q.birthday) || 'Date inconnue'}</small></div></button>`;
+    // Relation enregistrée entre la personne de la fiche et i (pour pouvoir la supprimer) ; aucune pour les frères et sœurs.
+    const relation = (i, type) => liens.find(l => l.type === (type === 'conjoint' ? 'partner' : 'parent') && (
+      type === 'parent' ? String(l.person1_id) === i && String(l.person2_id) === d.id
+        : type === 'enfant' ? String(l.person1_id) === d.id && String(l.person2_id) === i
+          : [String(l.person1_id), String(l.person2_id)].sort().join() === [d.id, i].sort().join()));
+    const bloc = (titre, ids, type) => `<h3>${titre}</h3>` + (ids.length ? ids.map(i => {
+      const q = parId(i).data, r = type && relation(i, type);
+      return `<div class="lg-ligne-lien"><button class="lg-lien-personne" data-id="${i}"><div class="lg-medaillon lg-${q.gender}">${medaillon(q)}</div>
+        <div><strong>${echapper(q['first name'])} ${echapper(q['last name'])}</strong><small>${dateLongue(q.birthday) || 'Date inconnue'}</small></div></button>
+        ${r ? `<button class="lg-delier" data-relation="${r.id}" data-nom="${echapper(q['first name'])}" title="Supprimer ce lien">✕</button>` : ''}</div>`;
     }).join('') : '<p class="lg-vide-liste">Aucun</p>');
-    $('#lg-onglet-liens').innerHTML = bloc('Parents', d.rels.parents) + bloc('Conjoints', d.rels.spouses) + bloc('Enfants', d.rels.children) + bloc('Frères et sœurs', freres);
+    $('#lg-onglet-liens').innerHTML = bloc('Parents', d.rels.parents, 'parent') + bloc('Conjoints', d.rels.spouses, 'conjoint') + bloc('Enfants', d.rels.children, 'enfant') + bloc('Frères et sœurs', freres);
     $('#lg-fiche').classList.add('lg-ouvert');
   }
   function fermerFiche() { $('#lg-fiche').classList.remove('lg-ouvert'); choisi = null; }
@@ -375,6 +381,41 @@
       await api('POST', `/people/${choisi}/photos`, fd);
       await recharger(); toast('Photo enregistrée');
     } catch (err) { erreur(err); }
+  }
+
+  // ---- Relier deux personnes existantes, ou supprimer un lien
+  function preparerRelier() {
+    const f = $('#lg-form-relier'), d = parId(choisi), nom = d.data['first name'], type = f.type.value;
+    const deja = new Set([d.id, ...(type === 'parent' ? d.rels.parents : type === 'enfant' ? d.rels.children : d.rels.spouses)]);
+    const candidats = donnees.filter(x => !deja.has(x.id))
+      .sort((a, b) => `${a.data['first name']} ${a.data['last name']}`.localeCompare(`${b.data['first name']} ${b.data['last name']}`, 'fr'));
+    const avant = f.personne.value;
+    f.personne.innerHTML = candidats.map(x => `<option value="${x.id}">${echapper(x.data['first name'])} ${echapper(x.data['last name'])}${annee(x.data.birthday) ? ' (' + annee(x.data.birthday) + ')' : ''}</option>`).join('');
+    if (candidats.some(x => x.id === avant)) f.personne.value = avant;
+    const libelles = { parent: 'parent', enfant: 'enfant', conjoint: 'conjoint ou conjointe' };
+    $('#lg-relier-titre').textContent = `Relier ${nom} à une personne existante`;
+    $('#lg-relier-aide').textContent = candidats.length ? `La personne choisie deviendra ${libelles[type] === 'parent' ? 'un parent' : libelles[type] === 'enfant' ? 'un enfant' : 'le conjoint ou la conjointe'} de ${nom}.` : 'Aucune personne disponible pour ce type de lien.';
+  }
+  function relier() {
+    if (!peutModifier || !choisi) return;
+    const dlg = $('#lg-relier'), f = $('#lg-form-relier');
+    f.type.value = 'parent'; preparerRelier();
+    dlg.onclose = async () => {
+      if (dlg.returnValue !== 'ok' || !f.personne.value) return;
+      const autre = Number(f.personne.value), moi = Number(choisi), type = f.type.value;
+      const corps = type === 'parent' ? { type: 'parent', person1_id: autre, person2_id: moi }
+        : type === 'enfant' ? { type: 'parent', person1_id: moi, person2_id: autre }
+          : { type: 'partner', person1_id: moi, person2_id: autre };
+      try { await api('POST', `/trees/${arbre.id}/relationships`, corps); await recharger(); toast('Lien ajouté'); }
+      catch (err) { erreur(err); }
+    };
+    dlg.showModal();
+  }
+  async function delier(bouton) {
+    const d = parId(choisi);
+    if (!confirm(`Supprimer le lien entre ${d.data['first name']} et ${bouton.dataset.nom} ? Les deux personnes restent dans l'arbre.`)) return;
+    try { await api('DELETE', `/relationships/${bouton.dataset.relation}`); await recharger(); toast('Lien supprimé'); }
+    catch (err) { erreur(err); }
   }
 
   // ---- Import GEDCOM : aperçu obligatoire, puis import confirmé par l'empreinte du fichier
@@ -514,11 +555,16 @@
       document.querySelectorAll('.lg-onglets button').forEach(x => x.classList.toggle('lg-actif', x === b));
       for (const o of ['identite', 'liens', 'actions']) $('#lg-onglet-' + o).hidden = o !== b.dataset.onglet;
     }; });
-    $('#lg-onglet-liens').onclick = e => { const b = e.target.closest('[data-id]'); if (b) { centrer(b.dataset.id); ouvrirFiche(b.dataset.id); } };
+    $('#lg-onglet-liens').onclick = e => {
+      const x = e.target.closest('.lg-delier'); if (x) { delier(x); return; }
+      const b = e.target.closest('[data-id]'); if (b) { centrer(b.dataset.id); ouvrirFiche(b.dataset.id); }
+    };
+    $('#lg-form-relier').type.onchange = preparerRelier;
     $('#lg-onglet-actions').onclick = e => {
       const a = e.target.closest('[data-action]')?.dataset.action; if (!a) return;
       if (a === 'centrer') centrer(choisi);
       else if (a === 'supprimer') supprimer();
+      else if (a === 'relier') relier();
       else ajouter(a);
     };
     $('#lg-photo').onchange = e => { envoyerPhoto(e.target.files[0]); e.target.value = ''; };
