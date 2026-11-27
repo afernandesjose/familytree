@@ -1237,7 +1237,7 @@ fn($nA,$aB)=>(int)$aB['updated_at']<=>(int)$nA['updated_at']);return new DataRes
 
   // ---- Lignées : thème de couleur de chaque lignée (partagé par tous ceux qui voient l'arbre)
 
-  private const THEMES_LIGNEE = ['or', 'pourpre', 'bleu', 'rubis', 'emeraude', 'saphir', 'argent'];
+  private const THEMES_LIGNEE = ['or', 'pourpre', 'bleu', 'rubis', 'emeraude', 'saphir', 'argent', 'noir', 'ecarlate'];
 
   /** Thèmes de l'arbre : {clé de lignée (ou « * » pour tout l'arbre) → nom du thème}. */
   public function themes(int $nTreeId): DataResponse {

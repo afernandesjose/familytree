@@ -15,7 +15,7 @@ use OCP\IUserSession;
 
 /** Réglages d'affichage personnels (signe astrologique, arbres masqués), communs à tous les appareils de l'utilisateur. */
 final class AffichageController extends Controller {
-    private const DEFAUTS = ['signe' => true, 'arbres_masques' => []];
+    private const DEFAUTS = ['signe' => true, 'motif' => 'discret', 'arbres_masques' => []];
     private string $sUid;
 
     public function __construct(IRequest $oRequest, private IConfig $oConfig, IUserSession $oSession) {
@@ -35,6 +35,7 @@ final class AffichageController extends Controller {
         $aV = $this->valeurs();
         $aB = $this->request->getParams();
         if (array_key_exists('signe', $aB)) $aV['signe'] = in_array($aB['signe'], [true, 1, '1', 'true'], true);
+        if (array_key_exists('motif', $aB) && in_array($aB['motif'], ['aucun', 'discret', 'prononce'], true)) $aV['motif'] = $aB['motif'];
         if (array_key_exists('arbres_masques', $aB)) {
             $aV['arbres_masques'] = array_values(array_unique(array_map('intval', array_filter((array)$aB['arbres_masques'], fn($v) => ctype_digit((string)$v)))));
         }
@@ -46,6 +47,7 @@ final class AffichageController extends Controller {
         $aLus = json_decode($this->oConfig->getUserValue($this->sUid, 'lignees', 'affichage', '{}'), true);
         $aV = array_merge(self::DEFAUTS, array_intersect_key(is_array($aLus) ? $aLus : [], self::DEFAUTS));
         $aV['signe'] = (bool)$aV['signe'];
+        if (!in_array($aV['motif'], ['aucun', 'discret', 'prononce'], true)) $aV['motif'] = 'discret';
         $aV['arbres_masques'] = array_values(array_map('intval', (array)$aV['arbres_masques']));
         return $aV;
     }

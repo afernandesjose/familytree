@@ -176,6 +176,7 @@ Util::addScript('lignees', 'lignees');
     <form method="dialog" class="lg-champs" id="lg-form-affichage">
       <h3 class="lg-serif">Affichage</h3>
       <div class="lg-cases"><label><input type="checkbox" name="signe"> Afficher le signe astrologique</label></div>
+      <div><label>Motif damassé (fond et encadrés)</label><select name="motif"><option value="aucun">Aucun</option><option value="discret">Discret</option><option value="prononce">Prononcé</option></select></div>
       <h4 class="lg-section">Arbres affichés dans ma liste</h4>
       <div class="lg-cases" id="lg-affichage-arbres"></div>
       <p class="lg-aide">Réglages personnels, retrouvés sur tous vos appareils. Masquer un arbre ne le supprime pas et ne change pas son partage.</p>

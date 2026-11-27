@@ -39,7 +39,7 @@
     const m = /^\d{4}-(\d{2})-(\d{2})$/.exec(versIso(valeur)); if (!m) return null;
     const mois = +m[1], jour = +m[2], k = SIGNES.findIndex(([mo]) => mo === mois);
     const [, fin, nom, symbole] = jour <= SIGNES[k][1] ? SIGNES[k] : SIGNES[(k + 1) % 12];
-    void fin; return { nom, symbole };
+    void fin; return { nom, symbole: symbole + '\uFE0E' }; // U+FE0E : glyphe typographique plutôt qu'émoji
   }
 
   // ---- Préférences locales (thème, dernière personne affichée) : simple confort, jamais indispensable
@@ -57,6 +57,37 @@
     return json;
   }
 
+  // Motif damassé original (dessiné pour Lignées) : médaillon évidé, lys, acanthes dentelées, volutes, rosace en quinconce.
+  function motifDamas(trace, opacite = 1, echelle = 1) {
+    const cote = `
+      <path d="M8 -16 C20 -30 40 -32 50 -20 C44 -21 39 -17 41 -11 C47 -13 54 -9 54 -1 C48 -3 43 1 45 7 C39 6 33 2 26 0 C18 -2 11 -8 8 -16Z"/>
+      <path d="M6 22 C18 18 34 24 43 38 C37 36 32 39 33 45 C27 41 21 39 15 33 C11 29 8 26 6 22Z"/>
+      <path d="M10 -42 C24 -50 35 -61 31 -73 C28 -81 18 -79 19 -71 C20 -66 26 -66 26 -71" fill="none" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M4 -52 C12 -58 18 -66 18 -76 C10 -70 6 -62 4 -52Z"/>
+      <path d="M2 -56 C10 -62 16 -62 21 -56 C14 -55 8 -53 2 -50Z"/>
+      <path d="M2 40 C12 42 22 50 24 62 C16 58 8 52 2 46Z"/>
+      <circle cx="34" cy="-36" r="2.2"/><circle cx="40" cy="-28" r="1.6"/><circle cx="50" cy="12" r="1.8"/>`;
+    const motif = `
+      <g id="cote">${cote}</g><use href="#cote" transform="scale(-1,1)"/>
+      <path fill-rule="evenodd" d="M0 -50 C16 -44 24 -28 22 -10 C20 6 10 18 0 34 C-10 18 -20 6 -22 -10 C-24 -28 -16 -44 0 -50Z
+        M0 -39 C-10 -34 -14 -23 -13 -10 C-12 2 -6 11 0 22 C6 11 12 2 13 -10 C14 -23 10 -34 0 -39Z"/>
+      <path d="M0 -29 C6 -22 7 -13 0 -2 C-7 -13 -6 -22 0 -29Z"/><circle cx="0" cy="6" r="2.4"/><circle cx="0" cy="13" r="1.6"/>
+      <path d="M0 -79 C5 -71 5 -63 0 -55 C-5 -63 -5 -71 0 -79Z"/>
+      <path d="M0 36 C4 44 4 52 0 61 C-4 52 -4 44 0 36Z"/>`;
+    const rosace = `
+      <circle r="3.4"/>
+      ${[0, 90, 180, 270].map(a => `<path transform="rotate(${a})" d="M0 -5 C5 -9 5 -16 0 -21 C-5 -16 -5 -9 0 -5Z"/>`).join('')}
+      ${[45, 135, 225, 315].map(a => `<path transform="rotate(${a})" d="M0 -6 C3 -9 3 -12 0 -14 C-3 -12 -3 -9 0 -6Z"/>`).join('')}`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${130 * echelle}" height="${180 * echelle}" viewBox="0 0 130 180">
+      <defs><g id="m">${motif}</g><g id="r">${rosace}</g></defs>
+      <g fill="${trace}" stroke="${trace}" stroke-width="0" opacity="${opacite}">
+        <use href="#m" transform="translate(65 90)"/>
+        <use href="#r" transform="translate(0 0)"/><use href="#r" transform="translate(130 0)"/>
+        <use href="#r" transform="translate(0 180)"/><use href="#r" transform="translate(130 180)"/>
+      </g></svg>`;
+    return `url("data:image/svg+xml,${encodeURIComponent(svg.replace(/\s+/g, ' '))}")`;
+  }
+
   // ---- Thèmes royaux (un par lignée, enregistrés sur le serveur)
   const THEMES = {
     or: { nom: 'Or impérial', accent: '#b68934', or: '#c8a254', ligne: '#b9944c', union: '#c79332', fond: '#f6f1e7', grille: 'rgba(164,134,82,.11)', carte: '#fffdf9', survol: '#fff9ee', bord: 'rgba(180,145,78,.28)' },
@@ -67,6 +98,10 @@
     saphir: { nom: 'Saphir de minuit', accent: '#d7b45a', or: '#d7b45a', ligne: '#8ea3c9', union: '#e0bd62', fond: '#101a33', grille: 'rgba(150,170,220,.07)', carte: '#18264a', survol: '#1e2f5a', bord: 'rgba(170,190,240,.22)',
       texte: '#eef1fa', texte2: '#b9c3dc', texte3: '#8592b3', surface: 'rgba(20,32,62,.94)', sombre: '#e0bd62' },
     argent: { nom: 'Argent royal', accent: '#5b6472', or: '#8c96a5', ligne: '#8a93a0', union: '#a9b2bf', fond: '#f2f3f5', grille: 'rgba(90,100,115,.10)', carte: '#ffffff', survol: '#f7f8fa', bord: 'rgba(100,110,125,.26)', sombre: '#c3cad4' },
+    noir: { nom: 'Noir et or', accent: '#c9a14e', or: '#c9a14e', ligne: '#a8864a', union: '#d8b35e', fond: '#141210', grille: 'rgba(201,161,78,.06)', carte: '#1d1a16', survol: '#25211b', bord: 'rgba(201,161,78,.28)',
+      texte: '#f3ead6', texte2: '#c9bb9c', texte3: '#8f8470', surface: 'rgba(29,26,22,.94)', sombre: '#d8b35e' },
+    ecarlate: { nom: 'Écarlate royal', accent: '#7a1426', or: '#c39a3d', ligne: '#c39a3d', union: '#d8b35e', fond: '#6e1222', grille: 'rgba(195,154,61,.08)', carte: '#fffaf6', survol: '#fff3ec', bord: 'rgba(195,154,61,.4)',
+      texte: '#2a1215', texte2: '#6d4a4c', texte3: '#9a7b7c', surface: 'rgba(255,250,246,.95)', sombre: '#e0b860' },
   };
   let themes = {}; // clé de lignée (ou « * ») → nom du thème
 
@@ -81,7 +116,8 @@
   // Ponts vers d'autres arbres : id de personne → [{id, cible: {id, tree_id, tree_name, ...}, canDelete}]
   let ponts = new Map(), partages = [], estProprietaire = false, evenements = [];
   let parametresArbre = {};
-  let affichage = { signe: true, arbres_masques: [] }, acces = null; // réglages personnels d'affichage ; accès à l'arbre affiché // anniversaires, deces, rappel, lignee_conjoint, agenda…
+  let affichage = { signe: true, motif: 'discret', arbres_masques: [] }, acces = null; // réglages personnels d'affichage ; accès à l'arbre affiché // anniversaires, deces, rappel, lignee_conjoint, agenda…
+  const LC = 210, HC = 136; // taille des cartes (vue famille, vue centrée, placement)
   const parId = id => donnees.find(d => d.id === String(id));
   const personne = id => personnes.find(p => String(p.id) === String(id));
 
@@ -137,7 +173,7 @@
   }
   function calculerDisposition() {
     if (!donnees.length) { complet = disposition = null; ligneesNommees = []; remplirLignees(); return; }
-    complet = LigneesVueComplete.calculer(donnees.map(versModule), liens.map(lienModule), { reference: personneMoi() });
+    complet = LigneesVueComplete.calculer(donnees.map(versModule), liens.map(lienModule), { reference: personneMoi(), largeurCarte: LC, hauteurCarte: HC });
     donnees.forEach(d => { d.data._generation = complet.cartes.get(d.id)?.gen || 1; });
     ligneesNommees = complet.lignees.filter(l => l.membres.length >= 2).map(l => ({ ...l, nom: nomLignee(l) }));
     const existe = cle => ligneesNommees.some(l => l.cle === cle);
@@ -159,7 +195,7 @@
     for (const id of membres) for (const c of parId(id).rels.spouses) visibles.add(c);
     const ls = liens.filter(l => visibles.has(String(l.person1_id)) && visibles.has(String(l.person2_id))
       && !(l.type === 'parent' && !membres.has(String(l.person2_id))));
-    return LigneesVueComplete.calculer(donnees.filter(d => visibles.has(d.id)).map(versModule), ls.map(lienModule), { reference: personneMoi() });
+    return LigneesVueComplete.calculer(donnees.filter(d => visibles.has(d.id)).map(versModule), ls.map(lienModule), { reference: personneMoi(), largeurCarte: LC, hauteurCarte: HC });
   }
   const cleOuToutes = id => { const c = complet?.cleDe.get(String(id)); return ligneesNommees.some(l => l.cle === c) ? c : 'toutes'; };
   function remplirLignees() {
@@ -191,15 +227,45 @@
   const initiales = p => (((p['first name'] || '')[0] || '') + ((p['last name'] || '')[0] || '')).toUpperCase();
   const medaillon = p => p.avatar ? `<img src="${echapper(p.avatar)}" alt="">` : echapper(initiales(p));
 
+  // Âge en années révolues entre deux dates ISO (aujourd'hui si la seconde est absente).
+  function age(naissance, fin) {
+    const a = /^(\d{4})-(\d{2})-(\d{2})$/.exec(versIso(naissance) || ''); if (!a) return null;
+    const f = fin ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(versIso(fin) || '') : null;
+    if (fin && !f) return null;
+    const d = f ? [+f[1], +f[2], +f[3]] : (n => [n.getFullYear(), n.getMonth() + 1, n.getDate()])(new Date());
+    const ans = d[0] - a[1] - (d[1] < +a[2] || (d[1] === +a[2] && d[2] < +a[3]) ? 1 : 0);
+    return ans >= 0 && ans < 130 ? ans : null;
+  }
+  // Ornements des cartes (dessinés pour Lignées), teintés par la couleur d'or du thème.
+  const FLEURON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 15 V6 C1 3 3 1 6 1 H15" fill="none" stroke="currentColor" stroke-width="1.1"/><path d="M3.5 12.5 V7 C3.5 5 5 3.5 7 3.5 H12.5" fill="none" stroke="currentColor" stroke-width=".7" opacity=".7"/><path d="M1 1 L4.2 2.2 L5 5 L2.2 4.2Z" fill="currentColor"/></svg>';
+  const COURONNE = '<svg viewBox="0 0 24 14" aria-hidden="true"><path d="M2 12 L1 3.5 L6.5 7.5 L12 1 L17.5 7.5 L23 3.5 L22 12Z" fill="currentColor"/><rect x="2" y="12" width="20" height="1.6" rx=".8" fill="currentColor"/><circle cx="12" cy="1.4" r="1.3" fill="currentColor"/><circle cx="1" cy="3.4" r="1" fill="currentColor"/><circle cx="23" cy="3.4" r="1" fill="currentColor"/></svg>';
+  const ICONE_LIEU = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 11 C3.5 8 2.3 6.2 2.3 4.5 A3.7 3.7 0 0 1 9.7 4.5 C9.7 6.2 8.5 8 6 11Z M6 3.1 A1.4 1.4 0 1 0 6 5.9 A1.4 1.4 0 1 0 6 3.1Z" fill="currentColor" fill-rule="evenodd"/></svg>';
+  const ICONE_ENFANTS = '<svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="4" cy="3.2" r="1.7" fill="currentColor"/><circle cx="8.6" cy="4.4" r="1.4" fill="currentColor"/><path d="M1 10.5 C1 7.6 2.4 6 4 6 S7 7.6 7 10.5Z M6.6 10.5 C6.8 8.6 7.6 7.4 8.6 7.4 S10.9 8.6 11 10.5Z" fill="currentColor"/></svg>';
+
   function carte(d) {
-    const p = d.data.data, ne = annee(p.birthday), mort = annee(p.death);
-    const dates = ne && mort ? `${ne} – ${mort}` : ne ? `Né${p.gender === 'F' ? 'e' : ''} en ${ne}` : 'Dates inconnues';
-    const estompee = focus && idCentre() && !lignee(idCentre()).has(d.data.id);
-    return `<div class="lg-carte lg-${p.gender}${estompee ? ' lg-estompee' : ''}${mort || !p.vivant ? ' lg-decede' : ''}" style="${teinte(d.data.id)}">
-      <span class="lg-generation">${romain(p._generation)}</span>${ponts.has(d.data.id) ? `<span class="lg-pont-carte" title="Aussi dans : ${ponts.get(d.data.id).map(x => '« ' + echapper(x.cible.tree_name) + ' »').join(', ')}">🔗</span>` : ''}
+    const p = d.data.data, id = d.data.id, ne = annee(p.birthday), mort = annee(p.death), decede = !!mort || !p.vivant;
+    const dates = ne && mort ? `${ne} – ${mort}` : ne ? `Né${p.gender === 'F' ? 'e' : ''} en ${ne}` : mort ? `† ${mort}` : 'Dates inconnues';
+    const estompee = focus && idCentre() && !lignee(idCentre()).has(id);
+    const fondateur = ligneesNommees.find(l => l.racine.includes(String(id)));
+    // Petites informations : lieu de naissance, enfants, âge (ou âge au décès).
+    const lieu = (p.place || '').split(',')[0].trim(), enfants = d.data.rels?.children?.length || 0;
+    const conjoint = parId(d.data.rels?.spouses?.[0])?.data;
+    const ans = decede ? (mort ? age(p.birthday, p.death) : null) : age(p.birthday);
+    const infos = [
+      lieu && `<span class="lg-info" title="Né${p.gender === 'F' ? 'e' : ''} à ${echapper(p.place)}">${ICONE_LIEU}${echapper(lieu)}</span>`,
+      enfants && `<span class="lg-info lg-info-enfants" title="${enfants} enfant${enfants > 1 ? 's' : ''}">${ICONE_ENFANTS}${enfants}</span>`,
+      conjoint && `<span class="lg-info lg-info-conjoint" title="Union avec ${echapper(conjoint['first name'] + ' ' + conjoint['last name'])}">⚭ ${echapper(conjoint['first name'])}</span>`,
+    ].filter(Boolean).join('');
+    const z = signe(p.birthday);
+    return `<div class="lg-carte lg-${p.gender}${estompee ? ' lg-estompee' : ''}${decede ? ' lg-decede' : ''}${fondateur ? ' lg-fondateur' : ''}" style="${teinte(id)}">
+      <i class="lg-coin lg-c1">${FLEURON}</i><i class="lg-coin lg-c2">${FLEURON}</i><i class="lg-coin lg-c3">${FLEURON}</i><i class="lg-coin lg-c4">${FLEURON}</i>
+      ${fondateur ? `<span class="lg-couronne" title="Fondateur de la lignée ${echapper(fondateur.nom)}">${COURONNE}</span>` : ''}
+      <span class="lg-generation" title="Génération ${romain(p._generation)}">${romain(p._generation)}</span>${ponts.has(id) ? `<span class="lg-pont-carte" title="Aussi dans : ${ponts.get(id).map(x => '« ' + echapper(x.cible.tree_name) + ' »').join(', ')}">🔗</span>` : ''}
       <div class="lg-haut"><div class="lg-medaillon">${medaillon(p)}</div>
-        <div class="lg-identite"><div class="lg-prenom">${echapper(p['first name'])}</div><div class="lg-nom">${echapper(p['last name'])}</div></div></div>
-      <div class="lg-bas"><span>${echapper(p.occupation || (p.place || '').split(',')[0])}</span><span>${dates}${(z => z ? ` <span class="lg-zodiaque" title="${z.nom}">${z.symbole}</span>` : '')(signe(p.birthday))}</span></div>
+        <div class="lg-identite"><div class="lg-prenom">${echapper(p['first name'])}</div><div class="lg-nom">${echapper(p['last name'])}</div>
+          ${p.occupation ? `<div class="lg-metier">${echapper(p.occupation)}</div>` : ''}</div></div>
+      <div class="lg-infos">${infos}</div>
+      <div class="lg-bas"><span>${dates}</span><span>${ans !== null ? `<span class="lg-age">${decede ? '† à ' : ''}${ans} an${ans > 1 ? 's' : ''}</span>` : ''}${z ? ` <span class="lg-zodiaque" title="${z.nom}">${z.symbole}</span>` : ''}</span></div>
     </div>`;
   }
 
@@ -250,13 +316,19 @@
   function appliquerTheme() {
     const r = racine(), sombre = r.classList.contains('lg-emeraude');
     const nom = plusieursVisibles() ? themeDe('*') : themeDe(cleCourante()), t = THEMES[nom];
-    for (const v of ['--accent', '--or', '--ligne', '--union', '--fond', '--grille', '--carte', '--carte-survol', '--bord', '--texte', '--texte-2', '--texte-3', '--surface']) r.style.removeProperty(v);
+    for (const v of ['--accent', '--or', '--ligne', '--union', '--fond', '--grille', '--carte', '--carte-survol', '--bord', '--texte', '--texte-2', '--texte-3', '--surface', '--motif-fond', '--motif-carte']) r.style.removeProperty(v);
     if (sombre) { r.style.setProperty('--accent', t.sombre || t.or); r.style.setProperty('--or', t.sombre || t.or); r.style.setProperty('--union', t.union); }
     else {
       const vars = { '--accent': t.accent, '--or': t.or, '--ligne': t.ligne, '--union': t.union, '--fond': t.fond, '--grille': t.grille,
         '--carte': t.carte, '--carte-survol': t.survol, '--bord': t.bord, '--texte': t.texte, '--texte-2': t.texte2, '--texte-3': t.texte3, '--surface': t.surface };
       for (const [k, v] of Object.entries(vars)) if (v) r.style.setProperty(k, v);
     }
+    // Motif damassé : sur le fond (selon le réglage personnel), et très discret dans les cartes et les panneaux.
+    const fondSombre = sombre || ['saphir', 'noir', 'ecarlate'].includes(nom);
+    const niveaux = { aucun: [0, 0], discret: fondSombre ? [.3, .1] : [.16, .06], prononce: fondSombre ? [.62, .16] : [.34, .1] }[affichage.motif || 'discret'] || [0, 0];
+    const trace = sombre ? (t.sombre || t.or) : t.or;
+    r.style.setProperty('--motif-fond', niveaux[0] ? motifDamas(trace, niveaux[0]) : 'none');
+    r.style.setProperty('--motif-carte', niveaux[1] ? motifDamas(trace, niveaux[1], .5) : 'none');
     $('#lg-pastille-theme').style.background = t.accent;
     $('#lg-theme-lignee').hidden = !peutModifier || !donnees.length;
     $('#lg-theme-lignee').title = `Thème royal : ${t.nom}`;
@@ -281,7 +353,6 @@
   }
 
   // ---- Vue « toute la famille »
-  const LC = 210, HC = 112;
   function dessinerFamille(idCentre, transformation) {
     const conteneur = $('#lg-arbre');
     conteneur.innerHTML = '<div class="lg-monde"><svg class="lg-liens" xmlns="http://www.w3.org/2000/svg"></svg></div>';
@@ -371,7 +442,7 @@
       .setSortChildrenFunction((a, b) => (a.data.birthday || '9999').localeCompare(b.data.birthday || '9999'))
       .setLinkSpouseText(() => '⚭')
       .setAfterUpdate(() => { estomperLiens(); mettreAJourZoom(); mettreAJourStats(); });
-    graphique.setCardHtml().setCardDim({ w: 210, h: 112 }).setMiniTree(false)
+    graphique.setCardHtml().setCardDim({ w: LC, h: HC }).setMiniTree(false)
       .setCardInnerHtmlCreator(carte)
       .setOnCardClick((e, d) => { centrer(d.data.id); ouvrirFiche(d.data.id); });
     const depart = parId(idCentre) ? String(idCentre) : personneMoi();
@@ -679,15 +750,15 @@
   }
   async function reglagesAffichage() {
     const dlg = $('#lg-affichage'), f = $('#lg-form-affichage');
-    f.signe.checked = affichage.signe;
+    f.signe.checked = affichage.signe; f.motif.value = affichage.motif || 'discret';
     $('#lg-affichage-arbres').innerHTML = arbres.map(a => `<label><input type="checkbox" name="arbre" value="${a.id}" ${affichage.arbres_masques.includes(Number(a.id)) ? '' : 'checked'}>
       <span>${echapper(a.name)} <small>· ${a.isOwner ? 'à vous' : 'partagé avec vous'} · ${a.people_count ?? '?'} pers.</small></span></label>`).join('');
     $('#lg-affichage-ok').onclick = async () => {
       const masques = [...f.querySelectorAll('input[name="arbre"]:not(:checked)')].map(c => Number(c.value));
       if (masques.length >= arbres.length) { toast('Gardez au moins un arbre affiché'); return; }
       try {
-        affichage = await api('PUT', '/affichage', { signe: f.signe.checked, arbres_masques: masques });
-        racine().classList.toggle('lg-sans-signe', !affichage.signe);
+        affichage = await api('PUT', '/affichage', { signe: f.signe.checked, motif: f.motif.value, arbres_masques: masques });
+        racine().classList.toggle('lg-sans-signe', !affichage.signe); appliquerTheme();
         dlg.close();
         if (affichage.arbres_masques.includes(Number(arbre.id))) { const a = arbresAffiches()[0]; remplirChoix(a.id); fermerFiche(); await chargerArbre(a.id); }
         else remplirChoix(arbre.id);

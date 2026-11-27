@@ -43,10 +43,10 @@
 
 /* Fond cartographique */
 #lignees #lg-arbre { position: absolute; inset: 0; background-color: var(--fond);
-  background-image: radial-gradient(circle at 50% 45%, transparent 0%, rgba(0,0,0,.04) 100%),
+  background-image: var(--motif-fond, none), radial-gradient(circle at 50% 45%, transparent 0%, rgba(0,0,0,.04) 100%),
     linear-gradient(to right, var(--grille) 1px, transparent 1px),
     linear-gradient(to bottom, var(--grille) 1px, transparent 1px);
-  background-size: 100% 100%, 40px 40px, 40px 40px; }
+  background-size: auto, 100% 100%, 40px 40px, 40px 40px; }
 #lignees #lg-arbre.lg-mode-famille { cursor: grab; touch-action: none; overflow: hidden; }
 #lignees #lg-arbre.lg-mode-famille:active { cursor: grabbing; }
 #lignees .lg-monde { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
@@ -55,7 +55,7 @@
 #lignees .lg-liens .lg-anneaux circle { fill: var(--fond); stroke: var(--union-lignee, var(--union)); stroke-width: 1.8px; }
 #lignees .lg-liens g { transition: opacity .28s; }
 #lignees .lg-liens g.lg-estompe { opacity: .12; }
-#lignees .lg-place { position: absolute; width: 210px; height: 112px; }
+#lignees .lg-place { position: absolute; width: 210px; height: 136px; }
 #lignees .lg-place.card-main .lg-carte, #lignees .card-main .lg-carte { border-color: var(--or); box-shadow: 0 0 0 2.5px var(--or), 0 16px 34px -6px rgba(0,0,0,.2); }
 #lignees #lg-arbre.f3 { color: var(--texte); }
 #lignees #lg-arbre .link { stroke: var(--ligne) !important; stroke-width: 2px !important; stroke-linecap: round; transition: opacity .28s; }
@@ -65,32 +65,58 @@
 #lignees #lg-arbre.lg-vide::after { content: attr(data-message); position: absolute; inset: 0; display: grid; place-items: center;
   font: 600 22px "Cormorant Garamond", serif; color: var(--texte-2); }
 
-/* Cartes médaillons */
+/* Cartes médaillons, encadrement royal : double filet d'or, fleurons d'angle, couronne des fondateurs */
 #lignees .f3 div.card { background: transparent; }
-#lignees .lg-carte { position: relative; width: 210px; height: 112px; border-radius: 16px; background: var(--carte);
-  border: 1px solid var(--bord); box-shadow: var(--ombre); padding: 10px 12px; text-align: left;
+#lignees .lg-carte { position: relative; width: 210px; height: 136px; border-radius: 14px; background: var(--motif-carte, none), var(--carte);
+  border: 1.5px solid color-mix(in srgb, var(--or) 70%, transparent);
+  box-shadow: var(--ombre), inset 0 0 0 3px var(--carte), inset 0 0 0 4px color-mix(in srgb, var(--or) 45%, transparent), inset 0 1px 14px -6px color-mix(in srgb, var(--or) 40%, transparent);
+  padding: 11px 13px 9px; text-align: left;
   display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; color: var(--texte);
   transition: transform .22s cubic-bezier(.22,1,.36,1), box-shadow .22s, border-color .22s, opacity .28s, background-color .25s; }
-#lignees .lg-carte:hover { transform: translateY(-3px); background: var(--carte-survol); border-color: var(--or); }
-#lignees .card-main .lg-carte { border-color: var(--or); box-shadow: var(--ombre-choix); }
+#lignees .lg-carte:hover { transform: translateY(-3px); background: var(--motif-carte, none), var(--carte-survol); border-color: var(--or);
+  box-shadow: var(--ombre), 0 14px 30px -10px color-mix(in srgb, var(--or) 45%, transparent), inset 0 0 0 3px var(--carte-survol), inset 0 0 0 4px color-mix(in srgb, var(--or) 65%, transparent); }
+#lignees .card-main .lg-carte, #lignees .lg-place.card-main .lg-carte { border-color: var(--or);
+  box-shadow: 0 0 0 2.5px var(--or), 0 16px 34px -6px rgba(0,0,0,.22), inset 0 0 0 3px var(--carte), inset 0 0 0 4px var(--or); }
 #lignees .lg-carte.lg-estompee { opacity: .24; filter: grayscale(.55); }
-#lignees .lg-carte.lg-decede { background-image: linear-gradient(135deg, transparent 92%, rgba(120,110,95,.18) 92%); }
+#lignees .lg-carte.lg-decede { background: var(--motif-carte, none), linear-gradient(135deg, transparent 90%, rgba(120,110,95,.16) 90%), var(--carte); }
+#lignees .lg-coin { position: absolute; width: 15px; height: 15px; color: var(--or); pointer-events: none; line-height: 0; }
+#lignees .lg-coin svg { width: 100%; height: 100%; display: block; }
+#lignees .lg-c1 { left: 5px; top: 5px; }
+#lignees .lg-c2 { right: 5px; top: 5px; transform: scaleX(-1); }
+#lignees .lg-c3 { left: 5px; bottom: 5px; transform: scaleY(-1); }
+#lignees .lg-c4 { right: 5px; bottom: 5px; transform: scale(-1,-1); }
+#lignees .lg-couronne { position: absolute; left: 50%; top: -11px; width: 26px; height: 16px; transform: translateX(-50%); color: var(--or); line-height: 0;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+#lignees .lg-couronne svg { width: 100%; height: 100%; }
 #lignees .lg-haut { display: flex; gap: 10px; align-items: center; min-width: 0; }
-#lignees .lg-medaillon { flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; overflow: hidden;
-  font: 700 17px/1 "Cormorant Garamond", serif; color: var(--accent); background: rgba(198,150,56,.08); border: 2px solid var(--homme); }
+#lignees .lg-medaillon { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; overflow: hidden;
+  font: 700 17px/1 "Cormorant Garamond", serif; color: var(--accent); background: color-mix(in srgb, var(--or) 10%, var(--carte)); border: 2px solid var(--homme);
+  box-shadow: 0 0 0 2px var(--carte), 0 0 0 3.2px var(--or), 0 3px 8px -2px rgba(0,0,0,.25); margin: 3px 0 0 3px; }
 #lignees .lg-F .lg-medaillon, #lignees .lg-medaillon.lg-F { border-color: var(--femme); }
 #lignees .lg-medaillon img { width: 100%; height: 100%; object-fit: cover; }
-#lignees .lg-identite { min-width: 0; flex: 1; padding-right: 26px; }
-#lignees .lg-prenom { font: 700 19px/1.05 "Cormorant Garamond", serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#lignees .lg-nom { font-size: 11px; color: var(--texte-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-#lignees .lg-generation { position: absolute; top: 10px; right: 10px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 6px;
-  border: 1px solid var(--bord); color: var(--accent); font: 600 9.5px/18px "Plus Jakarta Sans", sans-serif; text-align: center; }
-#lignees .lg-bas { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid var(--bord); padding-top: 7px;
-  font-size: 10.5px; color: var(--texte-2); white-space: nowrap; }
+#lignees .lg-identite { min-width: 0; flex: 1; padding-right: 28px; }
+#lignees .lg-prenom { font: 700 19.5px/1.05 "Cormorant Garamond", serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: .2px; }
+#lignees .lg-nom { font: 600 10px/1.2 "Plus Jakarta Sans", sans-serif; letter-spacing: 1.1px; text-transform: uppercase; color: var(--texte-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px; }
+#lignees .lg-metier { font: italic 600 12.5px/1.1 "Cormorant Garamond", serif; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+#lignees .lg-generation { position: absolute; top: 11px; right: 14px; min-width: 21px; height: 19px; padding: 0 5px; border-radius: 4px;
+  border: 1px solid color-mix(in srgb, var(--or) 60%, transparent); color: var(--accent); background: color-mix(in srgb, var(--or) 9%, var(--carte));
+  font: 700 11px/17px "Cormorant Garamond", serif; letter-spacing: .5px; text-align: center; }
+#lignees .lg-infos { display: flex; gap: 10px; align-items: center; min-width: 0; padding: 0 2px; font-size: 10.5px; color: var(--texte-2); white-space: nowrap; }
+#lignees .lg-info { display: inline-flex; align-items: center; gap: 3px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+#lignees .lg-info:first-child { flex: 0 1 auto; }
+#lignees .lg-info-enfants { flex: none; }
+#lignees .lg-info svg { flex: none; width: 11px; height: 11px; color: var(--or); }
+#lignees .lg-info-conjoint { flex: 0 1 auto; color: var(--accent); font-weight: 600; }
+#lignees .lg-infos:empty::before { content: "\2726  \2726  \2726"; margin: 0 auto; color: color-mix(in srgb, var(--or) 55%, transparent); font-size: 9px; letter-spacing: 6px; }
+#lignees .lg-bas { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 2px 0;
+  font-size: 10.5px; color: var(--texte-2); white-space: nowrap;
+  background: linear-gradient(to right, transparent, color-mix(in srgb, var(--or) 65%, transparent) 18%, color-mix(in srgb, var(--or) 65%, transparent) 82%, transparent) top / 100% 1px no-repeat; }
+#lignees .lg-bas::before { content: ""; position: absolute; left: 50%; top: -3px; width: 6px; height: 6px; background: var(--or); transform: translateX(-50%) rotate(45deg); }
 #lignees .lg-bas span:first-child { overflow: hidden; text-overflow: ellipsis; }
+#lignees .lg-age { font-weight: 600; color: var(--texte); }
 
 /* Interface flottante */
-#lignees .lg-panneau { background: var(--surface); border: 1px solid var(--bord); backdrop-filter: blur(12px); box-shadow: 0 10px 25px -8px rgba(0,0,0,.15); }
+#lignees .lg-panneau { background: var(--motif-carte, none), var(--surface); border: 1px solid var(--bord); backdrop-filter: blur(12px); box-shadow: 0 10px 25px -8px rgba(0,0,0,.15); }
 #lignees .lg-entete { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 30; display: flex; flex-wrap: wrap;
   justify-content: space-between; gap: 8px; pointer-events: none; }
 #lignees .lg-entete > * { pointer-events: auto; }
@@ -115,7 +141,7 @@
 #lignees .lg-voir-lignee { margin-top: 8px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--or); color: var(--accent);
   font-size: 12px; font-weight: 600; background: rgba(198,150,56,.1); }
 #lignees .lg-voir-lignee:hover { background: rgba(198,150,56,.2); }
-#lignees .lg-zodiaque { color: var(--accent); font-size: 11.5px; margin-left: 3px; }
+#lignees .lg-zodiaque { color: var(--accent); font-family: "Segoe UI Symbol", "DejaVu Sans", "Noto Sans Symbols", sans-serif; font-size: 11.5px; margin-left: 3px; }
 #lignees .lg-signe { display: inline-block; margin-top: 4px; font-size: 12.5px; color: var(--texte-2); }
 #lignees .lg-etat-partage { font-size: 11px; color: var(--texte-2); margin-top: 2px; }
 #lignees.lg-sans-signe .lg-zodiaque, #lignees.lg-sans-signe #lg-fiche-signe { display: none !important; }
@@ -123,7 +149,7 @@
 #lignees .lg-outils { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
 #lignees .lg-bouton { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
 #lignees .lg-bouton svg { color: var(--accent); }
-#lignees .lg-bouton.lg-plein { background: var(--accent); color: #fffdf8; border: none; box-shadow: 0 4px 12px -4px rgba(150,108,28,.5); }
+#lignees .lg-bouton.lg-plein { background: var(--accent); color: #fffdf8; border: 1px solid var(--or); box-shadow: 0 4px 12px -4px rgba(150,108,28,.5); }
 #lignees .lg-bouton.lg-plein svg { color: #fffdf8; }
 #lignees .lg-bouton.lg-actif { border-color: var(--or); color: var(--accent); }
 #lignees .lg-recherche { position: relative; }
@@ -213,7 +239,7 @@
 #lignees .lg-liste-partages { display: grid; gap: 6px; }
 #lignees .lg-partage { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 10px; border: 1px solid var(--bord); border-radius: 12px; font-size: 12.5px; }
 #lignees .lg-partage small { color: var(--texte-3); }
-#lignees .lg-pont-carte { position: absolute; top: 12px; right: 36px; font-size: 12px; line-height: 1; opacity: .9; }
+#lignees .lg-pont-carte { position: absolute; top: 13px; right: 40px; font-size: 12px; line-height: 1; opacity: .9; }
 #lignees .lg-dialogue-boutons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
 #lignees .lg-dialogue-boutons button:first-child { border: 1px solid var(--bord); background: none; border-radius: 14px; }
 
